@@ -9,7 +9,7 @@ import time
 class BacktestResultScreener:
     def __init__(self):
         self.asset      = "Cryptocurrency"
-        self.strategy   = "testing_basisRate"
+        self.strategy   = "testing_basis_index_price"
         self.exchange   = "binance"
         self.instrument = "futures"
         self.product    = "coinm_futures"
@@ -227,10 +227,10 @@ class BacktestResultScreener:
         product    = self.product
         interval   = self.interval
 
-        result_csv = f"D:/backtest/{asset}/{strategy}/{exchange}/{instrument}/{product}/{interval}/full_contrary_result_report.csv"
+        result_csv = f"D:/backtest/{asset}/{strategy}/{exchange}/{instrument}/{product}/{interval}/full_symbol_backtest_result.csv"
         result_df.to_csv(result_csv, index=False)
 
-        print(strategy, interval, product, instrument, exchange, asset, "action = exported full_backtest_report to csv")
+        print(strategy, interval, product, instrument, exchange, asset, "action = exported full_symbol_backtest_result to csv")
 
 def main():
     backtestResultScreener = BacktestResultScreener()
