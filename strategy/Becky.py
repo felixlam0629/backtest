@@ -12,9 +12,9 @@ import pandas as pd
 import requests
 import time
 
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.width', 320)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", None)
+pd.set_option("display.width", 320)
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -78,35 +78,35 @@ class BacktestSystem():
         len_of_para = len(para_dict[param3])
 
         for i in range(len_of_para):
-            sharpe_ratio = result_df[(result_df[param1] == 30) & (result_df[param2] == 1)]['strat_sharpe'].values[i]
+            sharpe_ratio = result_df[(result_df[param1] == 30) & (result_df[param2] == 1)]["strat_sharpe"].values[i]
             print(sharpe_ratio)
             sharpe_ratio_list.append(sharpe_ratio)
 
-        pivot_table = result_df.pivot(index = param1, columns = param2, values = 'strat_sharpe')
+        pivot_table = result_df.pivot(index = param1, columns = param2, values = "strat_sharpe")
         print(pivot_table)
         """
 
-        self.create_sharpe_ratio_surface(result_df, param1, param2, param3, 'SR')
-        self.create_sharpe_ratio_graph(result_df, param1, param2, 'SR for para1 and para2')
-        self.create_sharpe_ratio_graph(result_df, param1, param3, 'SR for para1 and para3')
-        self.create_sharpe_ratio_graph(result_df, param2, param3, 'SR for para2 and para3')
+        self.create_sharpe_ratio_surface(result_df, param1, param2, param3, "SR")
+        self.create_sharpe_ratio_graph(result_df, param1, param2, "SR for para1 and para2")
+        self.create_sharpe_ratio_graph(result_df, param1, param3, "SR for para1 and para3")
+        self.create_sharpe_ratio_graph(result_df, param2, param3, "SR for para2 and para3")
 
     def calculate_sharpe_stats(self, result_df, param1, param2):
         grouped = result_df.groupby([param1, param2])
-        stats = grouped['strat_sharpe'].describe()
+        stats = grouped["strat_sharpe"].describe()
         return stats
 
     def _get_para_dict(self):
         para_dict = {
-            'rolling_window' : [10, 20, 30], # rw cannot be 0
-            'upper_band'     : [0, 1, 2, 3, 4],
-            'lower_band'     : [0, 1, 2, 3, 4]
+            "rolling_window" : [10, 20, 30], # rw cannot be 0
+            "upper_band"     : [0, 1, 2, 3, 4],
+            "lower_band"     : [0, 1, 2, 3, 4]
         }
         """
         para_dict = {
-            'rolling_window' : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-            'upper_band'     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5],
-            'lower_band'     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]
+            "rolling_window" : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+            "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5],
+            "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]
         }
         """
 
@@ -143,28 +143,28 @@ class BacktestSystem():
         for para_dict_key in para_dict:
             result_dict[para_dict_key] = []
 
-        result_dict['num_of_long_trade']  = []
-        result_dict['num_of_short_trade'] = []
-        result_dict['num_of_trade']       = []
+        result_dict["num_of_long_trade"]  = []
+        result_dict["num_of_short_trade"] = []
+        result_dict["num_of_trade"]       = []
 
-        result_dict['strat_win_rate']   = []
-        result_dict['strat_ann_return'] = []
-        result_dict['strat_mdd']        = []
-        result_dict['strat_calmar']     = []
-        result_dict['strat_sharpe']     = []
+        result_dict["strat_win_rate"]   = []
+        result_dict["strat_ann_return"] = []
+        result_dict["strat_mdd"]        = []
+        result_dict["strat_calmar"]     = []
+        result_dict["strat_sharpe"]     = []
 
-        result_dict['long_sharpe']  = []
-        result_dict['short_sharpe'] = []
+        result_dict["long_sharpe"]  = []
+        result_dict["short_sharpe"] = []
 
-        result_dict['long_win_rate']   = []
-        result_dict['long_ann_return'] = []
-        result_dict['long_mdd']        = []
-        result_dict['long_calmar']     = []
+        result_dict["long_win_rate"]   = []
+        result_dict["long_ann_return"] = []
+        result_dict["long_mdd"]        = []
+        result_dict["long_calmar"]     = []
 
-        result_dict['short_win_rate']   = []
-        result_dict['short_ann_return'] = []
-        result_dict['short_mdd']        = []
-        result_dict['short_calmar']     = []
+        result_dict["short_win_rate"]   = []
+        result_dict["short_ann_return"] = []
+        result_dict["short_mdd"]        = []
+        result_dict["short_calmar"]     = []
 
         return result_dict
 
@@ -197,7 +197,7 @@ class BacktestSystem():
         self._create_folder(full_result_path)
 
         result_df  = pd.DataFrame(result_dict)
-        result_df  = result_df.sort_values(by = 'strat_sharpe', ascending = False)
+        result_df  = result_df.sort_values(by = "strat_sharpe", ascending = False)
         result_csv = f"{full_result_path}/{symbol}.csv"
         result_df.to_csv(result_csv, index = False)
 
@@ -345,9 +345,9 @@ class BacktestSystem():
 
         rolling_window = para_combination[0]
 
-        df['ma']      = df['fr_oi'].rolling(rolling_window).mean()
-        df['sd']      = df['fr_oi'].rolling(rolling_window).std()
-        df['z_score'] = (df['fr_oi'] - df['ma']) / df['sd']
+        df["ma"]      = df["fr_oi"].rolling(rolling_window).mean()
+        df["sd"]      = df["fr_oi"].rolling(rolling_window).std()
+        df["z_score"] = (df["fr_oi"] - df["ma"]) / df["sd"]
         # df.dropna(inplace = True)
 
         long_pos_opened  = False
@@ -378,7 +378,7 @@ class BacktestSystem():
     def get_backtest_ready_list_with_base_csv(self, base_csv, para_combination):
         df = pd.read_csv(base_csv)
 
-        signal = df['signal'].iloc[-1]
+        signal = df["signal"].iloc[-1]
 
         if signal == 1:
             long_pos_opened  = True
@@ -392,13 +392,13 @@ class BacktestSystem():
             long_pos_opened  = False
             short_pos_opened = True
 
-        signal_list            = df['signal'].tolist()
-        long_trading_pnl_list  = df['long_trading_pnl'].tolist()
-        short_trading_pnl_list = df['short_trading_pnl'].tolist()
-        long_fr_pnl_list       = df['long_fr_pnl'].tolist()
-        short_fr_pnl_list      = df['short_fr_pnl'].tolist()
-        long_tx_fee_list       = df['long_tx_fee'].tolist()
-        short_tx_fee_list      = df['short_tx_fee'].tolist()
+        signal_list            = df["signal"].tolist()
+        long_trading_pnl_list  = df["long_trading_pnl"].tolist()
+        short_trading_pnl_list = df["short_trading_pnl"].tolist()
+        long_fr_pnl_list       = df["long_fr_pnl"].tolist()
+        short_fr_pnl_list      = df["short_fr_pnl"].tolist()
+        long_tx_fee_list       = df["long_tx_fee"].tolist()
+        short_tx_fee_list      = df["short_tx_fee"].tolist()
 
         backtest_ready_list = []
 
@@ -464,9 +464,9 @@ class BacktestSystem():
         loop_len = len(df) - len(signal_list)
 
         for i in range(loop_len):
-            now_price   = df.loc[i, 'open']
-            now_fr      = df.loc[i, 'fundingRate']
-            now_z_score = df.loc[i, 'z_score']
+            now_price   = df.loc[i, "open"]
+            now_fr      = df.loc[i, "fundingRate"]
+            now_z_score = df.loc[i, "z_score"]
 
             # S1: 0 position -> no signal triggered
             if ((long_pos_opened == False) and (short_pos_opened == False)) and ((now_z_score <= upper_band) and (now_z_score >= -1 * lower_band)):
@@ -749,7 +749,7 @@ class BacktestSystem():
                 short_tx_fee = 0
                 short_tx_fee_list.append(short_tx_fee)
 
-        print(strategy, symbol, interval, product, instrument, exchange, asset, "action = finished backtest", '(', rolling_window, upper_band, lower_band, ')', )
+        print(strategy, symbol, interval, product, instrument, exchange, asset, "action = finished backtest", "(", rolling_window, upper_band, lower_band, ")", )
 
         single_result_df = self._get_single_result_df(df, signal_list, long_trading_pnl_list, short_trading_pnl_list, long_fr_pnl_list, short_fr_pnl_list, long_tx_fee_list, short_tx_fee_list)
         self._store_single_result_df(single_result_df, rolling_window, upper_band, lower_band)
@@ -880,16 +880,16 @@ class BacktestSystem():
     def create_sharpe_ratio_graph(self, result_df, x_param, y_param, title):
         x_values     = result_df[x_param]
         y_values     = result_df[y_param]
-        sharpe_ratio = result_df['strat_sharpe']
+        sharpe_ratio = result_df["strat_sharpe"]
 
         fig = plt.figure()
-        ax  = fig.add_subplot(111, projection = '3d')
+        ax  = fig.add_subplot(111, projection = "3d")
 
-        surface = ax.plot_trisurf(x_values, y_values, sharpe_ratio, cmap = 'viridis')
+        surface = ax.plot_trisurf(x_values, y_values, sharpe_ratio, cmap = "viridis")
 
         ax.set_xlabel(x_param)
         ax.set_ylabel(y_param)
-        ax.set_zlabel('Sharpe Ratio')
+        ax.set_zlabel("Sharpe Ratio")
         ax.set_title(title)
         plt.colorbar(surface)
 
@@ -899,18 +899,18 @@ class BacktestSystem():
         x_values     = result_df[x_param]
         y_values     = result_df[y_param]
         z_values     = result_df[z_param]
-        sharpe_ratio = result_df['strat_sharpe']
+        sharpe_ratio = result_df["strat_sharpe"]
 
         fig = plt.figure()
-        ax  = fig.add_subplot(111, projection = '3d')
+        ax  = fig.add_subplot(111, projection = "3d")
 
-        sc = ax.scatter(x_values, y_values, z_values, c = sharpe_ratio, cmap = 'viridis')
+        sc = ax.scatter(x_values, y_values, z_values, c = sharpe_ratio, cmap = "viridis")
 
         ax.set_xlabel(x_param)
         ax.set_ylabel(y_param)
         ax.set_zlabel(z_param)
         ax.set_title(title)
-        plt.colorbar(sc, label = 'Sharpe Ratio')
+        plt.colorbar(sc, label = "Sharpe Ratio")
 
         plt.show()
 
@@ -969,9 +969,9 @@ class DataProcessor:
         price_csv       = f"{price_path}/{symbol}.csv"
 
         price_df = pd.read_csv(price_csv)
-        price_df = price_df[['open_time', 'datetime', 'open']]
-        price_df = price_df.round({'open_time': -3})
-        price_df.rename(columns = {"open_time": 'time'}, inplace = True)
+        price_df = price_df[["open_time", "datetime", "open"]]
+        price_df = price_df.round({"open_time": -3})
+        price_df.rename(columns = {"open_time": "time"}, inplace = True)
 
         return price_df
 
@@ -995,17 +995,17 @@ class DataProcessor:
 
         try:
             funding_rate_df = pd.read_csv(funding_rate_csv)
-            funding_rate_df = funding_rate_df[['fundingTime', 'datetime', 'fundingRate']]
-            funding_rate_df = funding_rate_df.round({'fundingTime': -3})
-            funding_rate_df.rename(columns = {"fundingTime": 'time'}, inplace = True)
+            funding_rate_df = funding_rate_df[["fundingTime", "datetime", "fundingRate"]]
+            funding_rate_df = funding_rate_df.round({"fundingTime": -3})
+            funding_rate_df.rename(columns = {"fundingTime": "time"}, inplace = True)
 
         except:
-            message = {'strategy': strategy, 'symbol': symbol, 'interval': interval, 'function': function, 'product': product, 'instrument': instrument, 'exchange': exchange, 'asset': asset,  'msg': 'no funding_rate_data file'}
+            message = {"strategy": strategy, "symbol": symbol, "interval": interval, "function": function, "product": product, "instrument": instrument, "exchange": exchange, "asset": asset,  "msg": "no funding_rate data file"}
             message = str(message)
             _send_tg_msg_to_backtest_channel(message)
 
-            print(strategy, symbol, interval, function, product, instrument, exchange, asset, 'backtest failed, reason = no funding_rate_data file')
-            print('**************************************************')
+            print(strategy, symbol, interval, function, product, instrument, exchange, asset, "response = failed backtest, reason = without funding_rate data file")
+            print("**************************************************")
 
             # raise StopIteration
 
@@ -1027,21 +1027,21 @@ class DataProcessor:
         symbol = self.symbol
 
         open_interest_path = self.get_open_interest_path()
-        open_interest_csv       = f"{open_interest_path}/{symbol}.csv"
+        open_interest_csv  = f"{open_interest_path}/{symbol}.csv"
 
         try:
             open_interest_df = pd.read_csv(open_interest_csv)
-            open_interest_df = open_interest_df[['time', 'datetime', 'open']]
-            open_interest_df = open_interest_df.round({'time': -3})
-            open_interest_df.rename(columns = {"open": 'openInterest'}, inplace = True)
+            open_interest_df = open_interest_df[["time", "datetime", "open"]]
+            open_interest_df = open_interest_df.round({"time": -3})
+            open_interest_df.rename(columns = {"open": "openInterest"}, inplace = True)
 
         except:
-            message = {'strategy': strategy, 'symbol': symbol, 'interval': interval, 'product': product, 'instrument': instrument, 'exchange': exchange, 'asset': asset, 'msg': 'no backtest_data file'}
+            message = {"strategy": strategy, "symbol": symbol, "interval": interval, "product": product, "instrument": instrument, "exchange": exchange, "asset": asset, "msg": "no backtest_data file"}
             message = str(message)
             self._send_tg_msg_to_backtest_channel(message)
 
-            print(strategy, symbol, interval, product, instrument, exchange, asset, 'backtest failed, reason = no backtest_data file')
-            print('**************************************************')
+            print(strategy, symbol, interval, product, instrument, exchange, asset, "response = failed backtest, reason = without open_interest data file")
+            print("**************************************************")
 
             # raise StopIteration
 
@@ -1054,7 +1054,7 @@ class DataProcessor:
         function   = "oi_ohlc"
         type       = "perpetual"
         interval   = "h8"
-        exchange   = "Binance" # they use big
+        exchange   = "Binance"
         symbol     = self.symbol
 
         open_interest_path = f"D:/{asset}/{source}/{instrument}/{function}/{type}/{interval}/{exchange}"
@@ -1065,9 +1065,9 @@ class DataProcessor:
         funding_rate_df = self._get_funding_rate_df()
         price_df        = self._get_price_df()
 
-        price_fr_df = pd.merge(funding_rate_df, price_df, on = 'time', how = 'inner')
-        price_fr_df.rename(columns = {"datetime_x": 'datetime'}, inplace = True)
-        price_fr_df = price_fr_df[['time', 'datetime', 'open', 'fundingRate']]
+        price_fr_df = pd.merge(funding_rate_df, price_df, on = "time", how = "inner")
+        price_fr_df.rename(columns = {"datetime_x": "datetime"}, inplace = True)
+        price_fr_df = price_fr_df[["time", "datetime", "open", "fundingRate"]]
 
         return price_fr_df
 
@@ -1075,25 +1075,25 @@ class DataProcessor:
         open_interest_df = self.get_open_interest_df()
         price_fr_df      = self._get_price_fr_df()
 
-        backtest_df = pd.merge(open_interest_df, price_fr_df, on = 'time', how = 'inner')
-        backtest_df.rename(columns = {"datetime_x": 'datetime'}, inplace = True)
+        backtest_df = pd.merge(open_interest_df, price_fr_df, on = "time", how = "inner")
+        backtest_df.rename(columns = {"datetime_x": "datetime"}, inplace = True)
 
-        backtest_df['fr_oi'] = backtest_df['fundingRate'] / backtest_df['openInterest']
+        backtest_df["fr_oi"] = backtest_df["fundingRate"] / backtest_df["openInterest"]
 
-        backtest_df = backtest_df[['time', 'datetime', 'open', 'fundingRate', 'openInterest', 'fr_oi']]
+        backtest_df = backtest_df[["time", "datetime", "open", "fundingRate", "openInterest", "fr_oi"]]
         backtest_df = self._clean_data(backtest_df)
 
         return backtest_df
 
     def _clean_data(self, df):
         df.dropna(inplace = True)  # drop Nan value
-        # df = df[df != 0].dropna()  # drop '0' value
+        # df = df[df != 0].dropna()  # drop "0" value
         df = df.reset_index(drop = True)  # reset row index
 
         return df
 
     def _send_tg_msg_to_backtest_channel(self, message):
-        base_url = 'https://api.telegram.org/bot6233469935:AAHayu1tVZ4NleqRFM-61F6VQObWMCwF90U/sendMessage?chat_id=-809813823&text='
+        base_url = "https://api.telegram.org/bot6233469935:AAHayu1tVZ4NleqRFM-61F6VQObWMCwF90U/sendMessage?chat_id=-809813823&text="
         requests.get(base_url + message)
 
     def _get_file_list(self, path):
