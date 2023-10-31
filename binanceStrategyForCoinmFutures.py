@@ -1,3 +1,8 @@
+"""
+rmb to change both the initialization
+sharpe ratio distribution table
+"""
+
 import datetime
 import itertools
 import math
@@ -24,7 +29,7 @@ class BacktestSystem():
         self.symbol     = symbol
 
         self.binance_tx_fee_rate = 0.0002
-        self.sharpe_multiple     = 365 * 3
+        self.ann_multiple        = 365 * 3
 
         self.processes = 8
 
@@ -39,16 +44,16 @@ class BacktestSystem():
         interval   = self.interval
         symbol     = self.symbol
 
-        manager_list = self.get_manager_list()
-        para_dict    = self.get_para_dict()
+        manager_list = self._get_manager_list()
+        para_dict    = self._get_para_dict()
 
-        para_list            = self.get_para_list(para_dict)
-        all_para_combination = self.get_all_para_combination(para_list, df, manager_list)
+        para_list            = self._get_para_list(para_dict)
+        all_para_combination = self._get_all_para_combination(para_list, df, manager_list)
 
-        result_dict        = self.get_result_dict(para_dict)
-        para_dict_key_list = self.get_para_dict_key_list(result_dict)
+        result_dict        = self._get_result_dict(para_dict)
+        para_dict_key_list = self._get_para_dict_key_list(result_dict)
 
-        # return_list = self.get_return_list(all_para_combination)
+        # return_list = self._get_return_list(all_para_combination)
         processes  = self.processes
         contractor = self.contractor
 
@@ -58,7 +63,7 @@ class BacktestSystem():
 
         print(strategy, symbol, interval, product, instrument, exchange, asset, "action = finished full backtest")
 
-        result_df = self.store_backtest_result_df(return_list, result_dict, para_dict_key_list, manager_list)
+        result_df = self._store_backtest_result_df(return_list, result_dict, para_dict_key_list, manager_list)
         print(strategy, symbol, interval, product, instrument, exchange, asset, "action = exported backtest_report to csv")
 
         # self.draw_grap_and_table(result_df, para_dict_key_list)
@@ -93,7 +98,7 @@ class BacktestSystem():
 
         return stats
 
-    def get_para_dict(self):
+    def _get_para_dict(self):
 
         para_dict = {
             'rolling_window' : [10, 20, 30], # rw cannot be 0
@@ -109,17 +114,17 @@ class BacktestSystem():
         """
         return para_dict
 
-    def get_manager_list(self):
+    def _get_manager_list(self):
         manager_list = mp.Manager().list()
 
         return manager_list
 
-    def get_para_list(self, para_dict):
+    def _get_para_list(self, para_dict):
         para_list = list(para_dict.values())
 
         return para_list
 
-    def get_all_para_combination(self, para_list, df, manager_list):
+    def _get_all_para_combination(self, para_list, df, manager_list):
         all_para_combination = list(itertools.product(*para_list))
 
         # Add df (backtesting object that is out of para_dict)0
@@ -134,7 +139,7 @@ class BacktestSystem():
 
         return all_para_combination
 
-    def get_result_dict(self, para_dict):
+    def _get_result_dict(self, para_dict):
         result_dict = {}
 
         for para_dict_key in para_dict:
@@ -165,12 +170,12 @@ class BacktestSystem():
 
         return result_dict
 
-    def get_para_dict_key_list(self, result_dict):
+    def _get_para_dict_key_list(self, result_dict):
         para_dict_key_list = list(result_dict)
 
         return para_dict_key_list
     """
-    def get_return_list(self, all_para_combination):
+    def _get_return_list(self, all_para_combination):
         processes  = self.processes
         contractor = self.contractor
 
@@ -181,7 +186,7 @@ class BacktestSystem():
         return return_list
         """
 
-    def store_backtest_result_df(self, return_list, result_dict, para_dict_key_list, manager_list):
+    def _store_backtest_result_df(self, return_list, result_dict, para_dict_key_list, manager_list):
         finished_path = self.finished_path
 
         symbol = self.symbol
@@ -216,6 +221,7 @@ class BacktestSystem():
         symbol      = self.symbol
 
         binance_tx_fee_rate = self.binance_tx_fee_rate
+        ann_multiple        = self.ann_multiple
 
         base_csv_existed, base_csv = self.check_base_csv(para_combination)
 
@@ -268,9 +274,9 @@ class BacktestSystem():
         long_win_rate  = self._calculate_win_rate(long_pos_pnl_day, long_neg_pnl_day)
         short_win_rate = self._calculate_win_rate(short_pos_pnl_day, short_neg_pnl_day)
 
-        strat_ann_return = np.around(np.mean(strat_full_pnl_list) * 365 * 3, decimals = 4)
-        long_ann_return  = np.around(np.mean(long_full_pnl_list) * 365 * 3, decimals = 4)
-        short_ann_return = np.around(np.mean(short_full_pnl_list) * 365 * 3, decimals = 4)
+        strat_ann_return = np.around(np.mean(strat_full_pnl_list) * ann_multiple, decimals = 4)
+        long_ann_return  = np.around(np.mean(long_full_pnl_list) * ann_multiple, decimals = 4)
+        short_ann_return = np.around(np.mean(short_full_pnl_list) * ann_multiple, decimals = 4)
 
         strat_mdd = self._calculate_mdd(strat_dd_list)
         long_mdd  = self._calculate_mdd(long_dd_list)
@@ -854,10 +860,10 @@ class BacktestSystem():
         return calmar
 
     def _calculate_sharpe_ratio(self, pnl_list):
-        sharpe_multiple = self.sharpe_multiple
+        ann_multiple = self.ann_multiple
         
         if np.std(pnl_list) != 0:
-            sharpe = np.around(np.mean(pnl_list) / np.std(pnl_list) * math.sqrt(sharpe_multiple), decimals = 2)
+            sharpe = np.around(np.mean(pnl_list) / np.std(pnl_list) * math.sqrt(ann_multiple), decimals = 2)
 
         else:
             sharpe = 0
