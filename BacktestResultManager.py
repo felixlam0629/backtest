@@ -23,11 +23,11 @@ class BacktestResultManager:
         self.interval   = "8h"
 
     def _delete_useless_backtest_result(self):
-        full_symbol_result_df = self.get_full_symbol_result_df()
-        delete_list = self.get_delete_list(full_symbol_result_df)
-        self.delete_file(delete_list)
+        full_symbol_result_df = self._get_full_symbol_result_df()
+        delete_list           = self._get_delete_list(full_symbol_result_df)
+        self._delete_folders(delete_list)
 
-    def _get_full_symbol_result_path(self):
+    def get_full_symbol_result_path(self):
         asset      = self.asset
         strategy   = self.strategy
         exchange   = self.exchange
@@ -40,30 +40,29 @@ class BacktestResultManager:
 
         return full_symbol_result_path
 
-    def get_full_symbol_result_df(self):
-        full_symbol_result_path = self._get_full_symbol_result_path()
+    def _get_full_symbol_result_df(self):
+        full_symbol_result_path = self.get_full_symbol_result_path()
         full_symbol_result_csv  = f"{full_symbol_result_path}/full_symbol_backtest_result.csv"
 
         full_symbol_result_df = pd.read_csv(full_symbol_result_csv)
 
         return full_symbol_result_df
 
-    def get_delete_list(self ,full_symbol_result_df):
-        df = full_symbol_result_df
-
+    def _get_delete_list(self, full_symbol_result_df):
+        result_df   = full_symbol_result_df
         delete_list = []
 
-        for i in range(len(df)):
-            symbol        = df.loc[i, "symbol"]
-            rubbish_strat = df.loc[i, "rubbish_strat"]
+        for i in range(len(result_df)):
+            symbol        = result_df.loc[i, "symbol"]
+            rubbish_strat = result_df.loc[i, "rubbish_strat"]
 
             if rubbish_strat == True:
                 delete_list.append(symbol)
 
         return delete_list
 
-    def delete_file(self, delete_list):
-        result_path = self._get_full_symbol_result_path()
+    def _delete_folders(self, delete_list):
+        result_path = self.get_full_symbol_result_path()
 
         for symbol in delete_list:
             symbol_path = os.path.join(result_path, symbol)
