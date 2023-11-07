@@ -7,6 +7,7 @@ import calendar
 import datetime
 import itertools
 import math
+import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
 import os
@@ -69,34 +70,77 @@ class BacktestSystem():
         result_df = self._store_backtest_result_df(return_list, result_dict, para_dict_key_list, manager_list)
         print(strategy, symbol, interval, category, exchange, asset, "action = exported backtest_report to csv")
 
-        # self.draw_grap_and_table(result_df, para_dict_key_list)
+        self._draw_graphs_and_tables(result_df, para_dict_key_list)
+        print(strategy, symbol, interval, category, exchange, asset, "action = created sharpe ratio distribution table")
 
-    def draw_grap_and_table(self, result_df, para_dict_key_list):
-        param1 = para_dict_key_list[0]
-        param2 = para_dict_key_list[1]
-        param3 = para_dict_key_list[2]
+    def _draw_graphs_and_tables(self, result_df, para_dict_key_list):
+        para_a = para_dict_key_list[0]
+        para_b = para_dict_key_list[1]
+        para_c = para_dict_key_list[2]
+
+        table_dict = {}
+        table_list = []
+
+        table_ab = result_df[(result_df[para_c] == 1.75)]
+        table_ab = table_ab.pivot(index = para_a, columns = para_b, values = "strat_sharpe")
+        table_dict["table"]  = table_ab
+        table_dict["para_a"] = para_a
+        table_dict["para_b"] = para_b
+        table_list.append(table_dict)
+
+        table_dict = {}
+        table_ac = result_df[(result_df[para_b] == 4)]
+        table_ac = table_ac.pivot(index = para_a, columns = para_c, values = "strat_sharpe")
+        table_dict["table"]  = table_ac
+        table_dict["para_a"] = para_a
+        table_dict["para_b"] = para_c
+        table_list.append(table_dict)
+
+        table_dict = {}
+        table_bc = result_df[(result_df[para_a] == 10)]
+        table_bc = table_bc.pivot(index = para_b, columns = para_c, values = "strat_sharpe")
+        table_dict["table"]  = table_bc
+        table_dict["para_a"] = para_b
+        table_dict["para_b"] = para_c
+        table_list.append(table_dict)
+
+        for table_dict in table_list:
+            self._draw_sharpe_distribution_table(table_dict)
+
+    def _draw_sharpe_distribution_table(self, table_dict):
+        table  = table_dict["table"]
+        para_x = table_dict["para_a"]
+        para_y = table_dict["para_b"]
+
+        plt.figure(figsize = (20, 8))
+        plt.imshow(table, cmap = "PuBu", aspect = "auto")
+        plt.colorbar()
+        plt.title("Sharpe Ratio Distribution")
+        plt.xlabel(para_y)
+        plt.ylabel(para_x)
+        plt.xticks(range(len(table.columns)), table.columns, rotation = "vertical")
+        plt.yticks(range(len(table.index)), table.index)
+
+        for i in range(len(table.index)):
+            for j in range(len(table.columns)):
+                plt.text(j, i, f"{table.iloc[i, j]:.2f}", ha = "center", va = "center", color = "black")
+
+        sharpe_table_path = self._get_sharpe_table_path(para_x, para_y)
+        plt.savefig(sharpe_table_path)
+        # plt.show()
 
         """
-        sharpe_ratio_list = []
+        # PuBu -> Blue, Yellow, for investors
+        # BuGn -> Green, for investors
 
-        len_of_para = len(para_dict[param3])
-
-        for i in range(len_of_para):
-            sharpe_ratio = result_df[(result_df[param1] == 30) & (result_df[param2] == 1)]["strat_sharpe"].values[i]
-            print(sharpe_ratio)
-            sharpe_ratio_list.append(sharpe_ratio)
-
-        pivot_table = result_df.pivot(index = param1, columns = param2, values = "strat_sharpe")
-        print(pivot_table)
+        # RdYlGn -> Green, Yellow, Red -> for myself
+        # YlGn   -> Green, Yellow      -> for myself
+        
+        self.create_sharpe_ratio_surface(result_df, para1, para2, para3, "SR")
         """
 
-        self.create_sharpe_ratio_surface(result_df, param1, param2, param3, "SR")
-        self.create_sharpe_ratio_graph(result_df, param1, param2, "SR for para1 and para2")
-        self.create_sharpe_ratio_graph(result_df, param1, param3, "SR for para1 and para3")
-        self.create_sharpe_ratio_graph(result_df, param2, param3, "SR for para2 and para3")
-
-    def calculate_sharpe_stats(self, result_df, param1, param2):
-        grouped = result_df.groupby([param1, param2])
+    def calculate_sharpe_stats(self, result_df, para1, para2):
+        grouped = result_df.groupby([para1, para2])
         stats   = grouped["strat_sharpe"].describe()
 
         return stats
@@ -110,11 +154,10 @@ class BacktestSystem():
         }
         """
         para_dict = {
-            "rolling_window" : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+            "rolling_window" : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], # rw cannot be 0
             "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5],
             "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]
         }
-
 
         return para_dict
 
@@ -882,28 +925,20 @@ class BacktestSystem():
         if os.path.isdir(folder) == False:
             os.mkdir(folder)
 
-    def create_sharpe_ratio_graph(self, result_df, x_param, y_param, title):
-        x_values     = result_df[x_param]
-        y_values     = result_df[y_param]
-        sharpe_ratio = result_df["strat_sharpe"]
+    def _get_sharpe_table_path(self, para_a, para_b):
+        finished_path = self.finished_path
 
-        fig = plt.figure()
-        ax  = fig.add_subplot(111, projection = "3d")
+        symbol = self.symbol
 
-        surface = ax.plot_trisurf(x_values, y_values, sharpe_ratio, cmap = "viridis")
+        sharpe_table_path = f"{finished_path}/{symbol}/full_result/{symbol}_{para_a}_{para_b}.png"
 
-        ax.set_xlabel(x_param)
-        ax.set_ylabel(y_param)
-        ax.set_zlabel("Sharpe Ratio")
-        ax.set_title(title)
-        plt.colorbar(surface)
+        return sharpe_table_path
 
-        plt.show()
-
-    def create_sharpe_ratio_surface(self, result_df, x_param, y_param, z_param, title):
-        x_values     = result_df[x_param]
-        y_values     = result_df[y_param]
-        z_values     = result_df[z_param]
+    """
+    def create_sharpe_ratio_surface(self, result_df, x_para, y_para, z_para, title):
+        x_values     = result_df[x_para]
+        y_values     = result_df[y_para]
+        z_values     = result_df[z_para]
         sharpe_ratio = result_df["strat_sharpe"]
 
         fig = plt.figure()
@@ -911,13 +946,14 @@ class BacktestSystem():
 
         sc = ax.scatter(x_values, y_values, z_values, c = sharpe_ratio, cmap = "viridis")
 
-        ax.set_xlabel(x_param)
-        ax.set_ylabel(y_param)
-        ax.set_zlabel(z_param)
+        ax.set_xlabel(x_para)
+        ax.set_ylabel(y_para)
+        ax.set_zlabel(z_para)
         ax.set_title(title)
         plt.colorbar(sc, label = "Sharpe Ratio")
 
         plt.show()
+        """
 
 class DataProcessor:
     def __init__(self, backtest_df_ready = False, symbol = None):
@@ -1189,7 +1225,7 @@ def main():
     symbol_list   = dataProcessor._get_symbol_list()
     finished_list = dataProcessor._get_finished_list()
 
-    # symbol_list   = ["BTCUSDT"]
+    symbol_list   = ["BTCUSDT"]
     # finished_list = []
 
     for symbol in symbol_list:
