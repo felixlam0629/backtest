@@ -1,6 +1,14 @@
 """
 rmb to change both the initialization
-sharpe ratio distribution table
+single_result -> inside multiprocessing
+full_result   -> outside multiprocessing
+
+Issue
+1) Return all the things from backtest function -> then do the next step instead of doing sth in the backtest function
+2. Divide the backtest_df into 3 df -> 1) training_df, 2) testing_df, 3) full_df
+3) Rename the df name to avoid confusion
+4) Synchornize start_int and end_int in above cases
+
 """
 
 import calendar
@@ -36,7 +44,7 @@ class BacktestSystem():
         self.binance_tx_fee_rate = 0.0002
         self.ann_multiple        = 365 * 3
 
-        self.processes = 8
+        self.processes = 1
 
     def run_backtest(self):
         df = self.df
@@ -146,7 +154,7 @@ class BacktestSystem():
         return stats
 
     def _get_para_dict(self):
-        """
+
         para_dict = {
             "rolling_window" : [10, 20, 30], # rw cannot be 0
             "upper_band"     : [0, 1, 2, 3, 4],
@@ -158,6 +166,7 @@ class BacktestSystem():
             "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5],
             "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]
         }
+        """
 
         return para_dict
 
@@ -259,15 +268,7 @@ class BacktestSystem():
             manager_list.append(self.backtest(para_combination[0:-1]))
 
     def backtest(self, para_combination):
-        asset    = self.asset
-        strategy = self.strategy
-        exchange = self.exchange
-        category = self.category
-        interval = self.interval
-        symbol   = self.symbol
-
-        binance_tx_fee_rate = self.binance_tx_fee_rate
-        ann_multiple        = self.ann_multiple
+        df = self.df
 
         base_csv_existed, base_csv = self.check_base_csv(para_combination)
 
@@ -275,98 +276,26 @@ class BacktestSystem():
             backtest_ready_list = self.get_backtest_ready_list_without_base_csv(para_combination)
 
         else:
-            backtest_ready_list = self.get_backtest_ready_list_with_base_csv(base_csv, para_combination)
+            backtest_ready_list = self.get_backtest_ready_list_with_base_csv(base_csv, para_combination) # start_int and end_int issue
 
-        single_result_list = self.get_single_backtest_result(backtest_ready_list, base_csv_existed, para_combination)
+        """
+        df_list = []
 
-        signal_list = single_result_list[0]
+        split_index = int(0.8 * len(df))
+        training_df = df.iloc[:split_index]
+        testing_df  = df.iloc[split_index:]
 
-        long_trading_pnl_list  = single_result_list[1]
-        short_trading_pnl_list = single_result_list[2]
+        df_list.append(df)
+        df_list.append(training_df)
+        df_list.append(testing_df)
+        """
 
-        long_fr_pnl_list  = single_result_list[3]
-        short_fr_pnl_list = single_result_list[4]
+        # for backtest_df in df_list: # the bt_ready is not same as the backtest_df
+        single_result_list = self.get_single_result_list(backtest_ready_list, base_csv_existed, para_combination)
+        single_result_df   = self._get_single_result_df(single_result_list)
+        self._store_single_result_df(single_result_df, para_combination)
 
-        long_tx_fee_list  = single_result_list[5]
-        short_tx_fee_list = single_result_list[6]
-
-        long_trading_fr_pnl_list  = np.add(long_trading_pnl_list, long_fr_pnl_list)
-        short_trading_fr_pnl_list = np.add(short_trading_pnl_list, short_fr_pnl_list)
-        strat_trading_pnl_list    = np.add(long_trading_pnl_list, short_trading_pnl_list)
-
-        long_full_pnl_list  = np.subtract(long_trading_fr_pnl_list, long_tx_fee_list)
-        short_full_pnl_list = np.subtract(short_trading_fr_pnl_list, short_tx_fee_list)
-
-        strat_full_pnl_list = np.add(long_full_pnl_list, short_full_pnl_list)
-
-        strat_dd_list = self._get_dd_list(strat_full_pnl_list)
-        long_dd_list  = self._get_dd_list(long_full_pnl_list)
-        short_dd_list = self._get_dd_list(short_full_pnl_list)
-
-        num_of_long_trade  = signal_list.count(1)
-        num_of_short_trade = signal_list.count(-1)
-        num_of_trade       = num_of_long_trade + num_of_short_trade
-
-        strat_pos_pnl_day = [num for num in strat_full_pnl_list if num > 0]
-        strat_neg_pnl_day = [num for num in strat_full_pnl_list if num < -1 * binance_tx_fee_rate]
-
-        long_pos_pnl_day = [num for num in long_full_pnl_list if num > 0]
-        long_neg_pnl_day = [num for num in long_full_pnl_list if num < -1 * binance_tx_fee_rate]
-
-        short_pos_pnl_day = [num for num in short_full_pnl_list if num > 0]
-        short_neg_pnl_day = [num for num in short_full_pnl_list if num < -1 * binance_tx_fee_rate]
-
-        strat_win_rate = self._calculate_win_rate(strat_pos_pnl_day, strat_neg_pnl_day)
-        long_win_rate  = self._calculate_win_rate(long_pos_pnl_day, long_neg_pnl_day)
-        short_win_rate = self._calculate_win_rate(short_pos_pnl_day, short_neg_pnl_day)
-
-        strat_ann_return = np.around(np.mean(strat_full_pnl_list) * ann_multiple, decimals = 4)
-        long_ann_return  = np.around(np.mean(long_full_pnl_list) * ann_multiple, decimals = 4)
-        short_ann_return = np.around(np.mean(short_full_pnl_list) * ann_multiple, decimals = 4)
-
-        strat_mdd = self._calculate_mdd(strat_dd_list)
-        long_mdd  = self._calculate_mdd(long_dd_list)
-        short_mdd = self._calculate_mdd(short_dd_list)
-
-        strat_calmar = self._calculate_calmar_ratio(strat_ann_return, strat_mdd)
-        long_calmar  = self._calculate_calmar_ratio(long_ann_return, long_mdd)
-        short_calmar = self._calculate_calmar_ratio(short_ann_return, short_mdd)
-
-        strat_sharpe = self._calculate_sharpe_ratio(strat_full_pnl_list)
-        long_sharpe  = self._calculate_sharpe_ratio(long_full_pnl_list)
-        short_sharpe = self._calculate_sharpe_ratio(short_full_pnl_list)
-
-        return_list = []
-
-        rolling_window = para_combination[0]
-        upper_band     = para_combination[1]
-        lower_band     = para_combination[2]
-
-        return_list.append(rolling_window)
-        return_list.append(upper_band)
-        return_list.append(lower_band)
-
-        return_list.append(num_of_long_trade)
-        return_list.append(num_of_short_trade)
-        return_list.append(num_of_trade)
-
-        return_list.append(strat_win_rate)
-        return_list.append(strat_ann_return)
-        return_list.append(strat_mdd)
-        return_list.append(strat_calmar)
-        return_list.append(strat_sharpe)
-        return_list.append(long_sharpe)
-        return_list.append(short_sharpe)
-
-        return_list.append(long_win_rate)
-        return_list.append(long_ann_return)
-        return_list.append(long_mdd)
-        return_list.append(long_calmar)
-
-        return_list.append(short_win_rate)
-        return_list.append(short_ann_return)
-        return_list.append(short_mdd)
-        return_list.append(short_calmar)
+        return_list = self._calculate_performance_matrix(single_result_list, para_combination)
 
         return return_list
 
@@ -463,7 +392,8 @@ class BacktestSystem():
 
         return backtest_ready_list
 
-    def get_single_backtest_result(self, backtest_ready_list, base_csv_existed, para_combination):
+    def get_single_result_list(self, backtest_ready_list, base_csv_existed, para_combination):
+        # df = backtest_df
         df = self.df
 
         asset    = self.asset
@@ -473,39 +403,29 @@ class BacktestSystem():
         interval = self.interval
         symbol   = self.symbol
 
-        binance_tx_fee_rate = self.binance_tx_fee_rate
-
         rolling_window = para_combination[0]
         upper_band     = para_combination[1]
         lower_band     = para_combination[2]
 
-        open_price  = 0
-        close_price = 0
-
-        signal = 0
-
+        open_price        = 0
+        close_price       = 0
+        signal            = 0
         long_trading_pnl  = 0
         short_trading_pnl = 0
+        long_fr_pnl       = 0
+        short_fr_pnl      = 0
+        long_tx_fee       = 0
+        short_tx_fee      = 0
 
-        long_fr_pnl  = 0
-        short_fr_pnl = 0
-
-        long_tx_fee  = 0
-        short_tx_fee = 0
-
-        long_pos_opened  = backtest_ready_list[0]
-        short_pos_opened = backtest_ready_list[1]
-
-        signal_list = backtest_ready_list[2]
-
+        long_pos_opened        = backtest_ready_list[0]
+        short_pos_opened       = backtest_ready_list[1]
+        signal_list            = backtest_ready_list[2]
         long_trading_pnl_list  = backtest_ready_list[3]
         short_trading_pnl_list = backtest_ready_list[4]
-
-        long_fr_pnl_list  = backtest_ready_list[5]
-        short_fr_pnl_list = backtest_ready_list[6]
-
-        long_tx_fee_list  = backtest_ready_list[7]
-        short_tx_fee_list = backtest_ready_list[8]
+        long_fr_pnl_list       = backtest_ready_list[5]
+        short_fr_pnl_list      = backtest_ready_list[6]
+        long_tx_fee_list       = backtest_ready_list[7]
+        short_tx_fee_list      = backtest_ready_list[8]
 
         single_result_list = []
 
@@ -564,7 +484,7 @@ class BacktestSystem():
                 short_fr_pnl = 0
                 short_fr_pnl_list.append(short_fr_pnl)
 
-                long_tx_fee = binance_tx_fee_rate
+                long_tx_fee = self.binance_tx_fee_rate
                 long_tx_fee_list.append(long_tx_fee)
 
                 short_tx_fee = 0
@@ -595,7 +515,7 @@ class BacktestSystem():
                 long_tx_fee = 0
                 long_tx_fee_list.append(long_tx_fee)
 
-                short_tx_fee = binance_tx_fee_rate
+                short_tx_fee = self.binance_tx_fee_rate
                 short_tx_fee_list.append(short_tx_fee)
 
             # S4: long position -> long signal ended but not trigger short signal
@@ -620,7 +540,7 @@ class BacktestSystem():
                 short_fr_pnl = 0
                 short_fr_pnl_list.append(short_fr_pnl)
 
-                long_tx_fee = binance_tx_fee_rate
+                long_tx_fee = self.binance_tx_fee_rate
                 long_tx_fee_list.append(long_tx_fee)
 
                 short_tx_fee = 0
@@ -651,7 +571,7 @@ class BacktestSystem():
                 long_tx_fee = 0
                 long_tx_fee_list.append(long_tx_fee)
 
-                short_tx_fee = binance_tx_fee_rate
+                short_tx_fee = self.binance_tx_fee_rate
                 short_tx_fee_list.append(short_tx_fee)
 
             # S6: long position -> long signal continue
@@ -736,7 +656,7 @@ class BacktestSystem():
                 short_fr_pnl = 0
                 short_fr_pnl_list.append(short_fr_pnl)
 
-                long_tx_fee = binance_tx_fee_rate
+                long_tx_fee = self.binance_tx_fee_rate
                 long_tx_fee_list.append(long_tx_fee)
 
                 short_tx_fee = 0
@@ -769,7 +689,7 @@ class BacktestSystem():
                 long_tx_fee = 0
                 long_tx_fee_list.append(long_tx_fee)
 
-                short_tx_fee = binance_tx_fee_rate
+                short_tx_fee = self.binance_tx_fee_rate
                 short_tx_fee_list.append(short_tx_fee)
 
                 open_price = now_price
@@ -799,9 +719,7 @@ class BacktestSystem():
 
         print(strategy, symbol, interval, category, exchange, asset, "action = finished backtest", "(", rolling_window, upper_band, lower_band, ")", )
 
-        single_result_df = self._get_single_result_df(df, signal_list, long_trading_pnl_list, short_trading_pnl_list, long_fr_pnl_list, short_fr_pnl_list, long_tx_fee_list, short_tx_fee_list)
-        self._store_single_result_df(single_result_df, rolling_window, upper_band, lower_band)
-
+        single_result_list.append(df)
         single_result_list.append(signal_list)
         single_result_list.append(long_trading_pnl_list)
         single_result_list.append(short_trading_pnl_list)
@@ -810,24 +728,28 @@ class BacktestSystem():
         single_result_list.append(long_tx_fee_list)
         single_result_list.append(short_tx_fee_list)
 
-        single_result_list.append(df)
-
         return single_result_list
 
-    def _get_single_result_df(self, df, signal_list, long_trading_pnl_list, short_trading_pnl_list, long_fr_pnl_list, short_fr_pnl_list, long_tx_fee_list, short_tx_fee_list):
-        signal_df = pd.DataFrame(signal_list)
+    def _get_single_result_df(self, single_result_list):
+        df                     = single_result_list[0]
+        signal_list            = single_result_list[1]
+        long_trading_pnl_list  = single_result_list[2]
+        short_trading_pnl_list = single_result_list[3]
+        long_fr_pnl_list       = single_result_list[4]
+        short_fr_pnl_list      = single_result_list[5]
+        long_tx_fee_list       = single_result_list[6]
+        short_tx_fee_list      = single_result_list[7]
 
+        signal_df            = pd.DataFrame(signal_list)
         long_trading_pnl_df  = pd.DataFrame(long_trading_pnl_list)
         short_trading_pnl_df = pd.DataFrame(short_trading_pnl_list)
+        long_fr_pnl_df       = pd.DataFrame(long_fr_pnl_list)
+        short_fr_pnl_df      = pd.DataFrame(short_fr_pnl_list)
+        long_tx_fee_df       = pd.DataFrame(long_tx_fee_list)
+        short_tx_fee_df      = pd.DataFrame(short_tx_fee_list)
 
-        long_fr_pnl_df  = pd.DataFrame(long_fr_pnl_list)
-        short_fr_pnl_df = pd.DataFrame(short_fr_pnl_list)
-
-        long_tx_fee_df  = pd.DataFrame(long_tx_fee_list)
-        short_tx_fee_df = pd.DataFrame(short_tx_fee_list)
-
-        df_col_list     = df.columns.tolist()
-        append_col_list = ["signal",
+        df_col_list          = df.columns.tolist()
+        append_col_list      = ["signal",
                     "long_trading_pnl", "short_trading_pnl",
                     "long_fr_pnl", "short_fr_pnl",
                     "long_tx_fee", "short_tx_fee"]
@@ -843,20 +765,115 @@ class BacktestSystem():
 
         return single_result_df
 
-    def _store_single_result_df(self, single_result_df, rolling_window, upper_band, lower_band):
-        finished_path = self.finished_path
+    def _store_single_result_df(self, single_result_df, para_combination):
+        rolling_window = para_combination[0]
+        upper_band     = para_combination[1]
+        lower_band     = para_combination[2]
 
-        symbol = self.symbol
-
-        result_path = f"{finished_path}/{symbol}"
+        result_path = f"{self.finished_path}/{self.symbol}"
         self._create_folder(result_path)
 
         single_result_path = f"{result_path}/single_result"
         self._create_folder(single_result_path)
 
-        single_result_csv = f"{single_result_path}/{symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
+        single_result_csv = f"{single_result_path}/{self.symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
         single_result_df.to_csv(single_result_csv, index = False)
 
+    def _calculate_performance_matrix(self, single_result_list, para_combination):
+        binance_tx_fee_rate = self.binance_tx_fee_rate
+
+        df = single_result_list[0]
+
+        signal_list = single_result_list[1]
+
+        long_trading_pnl_list  = single_result_list[2]
+        short_trading_pnl_list = single_result_list[3]
+
+        long_fr_pnl_list  = single_result_list[4]
+        short_fr_pnl_list = single_result_list[5]
+
+        long_tx_fee_list  = single_result_list[6]
+        short_tx_fee_list = single_result_list[7]
+
+        long_trading_fr_pnl_list  = np.add(long_trading_pnl_list, long_fr_pnl_list)
+        short_trading_fr_pnl_list = np.add(short_trading_pnl_list, short_fr_pnl_list)
+        strat_trading_pnl_list    = np.add(long_trading_pnl_list, short_trading_pnl_list)
+
+        long_full_pnl_list  = np.subtract(long_trading_fr_pnl_list, long_tx_fee_list)
+        short_full_pnl_list = np.subtract(short_trading_fr_pnl_list, short_tx_fee_list)
+
+        strat_full_pnl_list = np.add(long_full_pnl_list, short_full_pnl_list)
+
+        strat_dd_list = self._get_dd_list(strat_full_pnl_list)
+        long_dd_list  = self._get_dd_list(long_full_pnl_list)
+        short_dd_list = self._get_dd_list(short_full_pnl_list)
+
+        num_of_long_trade  = signal_list.count(1)
+        num_of_short_trade = signal_list.count(-1)
+        num_of_trade       = num_of_long_trade + num_of_short_trade
+
+        strat_pos_pnl_day = [num for num in strat_full_pnl_list if num > 0]
+        strat_neg_pnl_day = [num for num in strat_full_pnl_list if num < -1 * self.binance_tx_fee_rate]
+
+        long_pos_pnl_day = [num for num in long_full_pnl_list if num > 0]
+        long_neg_pnl_day = [num for num in long_full_pnl_list if num < -1 * self.binance_tx_fee_rate]
+
+        short_pos_pnl_day = [num for num in short_full_pnl_list if num > 0]
+        short_neg_pnl_day = [num for num in short_full_pnl_list if num < -1 * self.binance_tx_fee_rate]
+
+        strat_win_rate = self._calculate_win_rate(strat_pos_pnl_day, strat_neg_pnl_day)
+        long_win_rate  = self._calculate_win_rate(long_pos_pnl_day, long_neg_pnl_day)
+        short_win_rate = self._calculate_win_rate(short_pos_pnl_day, short_neg_pnl_day)
+
+        strat_ann_return = np.around(np.mean(strat_full_pnl_list) * self.ann_multiple, decimals = 4)
+        long_ann_return  = np.around(np.mean(long_full_pnl_list) * self.ann_multiple, decimals = 4)
+        short_ann_return = np.around(np.mean(short_full_pnl_list) * self.ann_multiple, decimals = 4)
+
+        strat_mdd = self._calculate_mdd(strat_dd_list)
+        long_mdd  = self._calculate_mdd(long_dd_list)
+        short_mdd = self._calculate_mdd(short_dd_list)
+
+        strat_calmar = self._calculate_calmar_ratio(strat_ann_return, strat_mdd)
+        long_calmar  = self._calculate_calmar_ratio(long_ann_return, long_mdd)
+        short_calmar = self._calculate_calmar_ratio(short_ann_return, short_mdd)
+
+        strat_sharpe = self._calculate_sharpe_ratio(strat_full_pnl_list)
+        long_sharpe  = self._calculate_sharpe_ratio(long_full_pnl_list)
+        short_sharpe = self._calculate_sharpe_ratio(short_full_pnl_list)
+
+        return_list = []
+
+        rolling_window = para_combination[0]
+        upper_band     = para_combination[1]
+        lower_band     = para_combination[2]
+
+        return_list.append(rolling_window)
+        return_list.append(upper_band)
+        return_list.append(lower_band)
+
+        return_list.append(num_of_long_trade)
+        return_list.append(num_of_short_trade)
+        return_list.append(num_of_trade)
+
+        return_list.append(strat_win_rate)
+        return_list.append(strat_ann_return)
+        return_list.append(strat_mdd)
+        return_list.append(strat_calmar)
+        return_list.append(strat_sharpe)
+        return_list.append(long_sharpe)
+        return_list.append(short_sharpe)
+
+        return_list.append(long_win_rate)
+        return_list.append(long_ann_return)
+        return_list.append(long_mdd)
+        return_list.append(long_calmar)
+
+        return_list.append(short_win_rate)
+        return_list.append(short_ann_return)
+        return_list.append(short_mdd)
+        return_list.append(short_calmar)
+
+        return return_list
     def _get_dd_list(self, pnl_list):
         cum_pnl_list = np.cumsum(pnl_list)
 
