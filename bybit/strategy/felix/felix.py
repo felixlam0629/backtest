@@ -1,4 +1,8 @@
 from bybit.BybitBacktestSystem import BybitBacktestSystem
+from bybit.BybitResultScreener import BybitResultScreener
+from bybit.BybitResultManager import BybitResultManager
+from bybit.BybitCurveDrawer import BybitCurveDrawer
+
 from bybit.strategy.felix.FelixDataProcessor import FelixDataProcessor
 
 class Felix:
@@ -8,6 +12,7 @@ class Felix:
         self.interval = "480"
 
         self.felixDataProcessor = FelixDataProcessor(self.strategy, self.category, self.interval)
+
     def _start_backtest_engine(self):
         symbol_list   = self.felixDataProcessor._get_symbol_list()
         finished_list = self.felixDataProcessor._get_finished_list()
@@ -32,9 +37,29 @@ class Felix:
             except StopIteration:
                 pass
 
+    def screen_full_backtest_result(self):
+        bybitResultScreener = BybitResultScreener(self.strategy, self.category, self.interval)
+        bybitResultScreener._generate_full_symbol_backtest_report()
+
+    def manage_full_backtest_result(self):
+        bybitResultManager = BybitResultManager(self.strategy, self.category, self.interval)
+        bybitResultManager._delete_useless_backtest_result()
+
+    def draw_full_backtest_result_curves(self):
+        symbol         = "BTCUSDT"
+        rolling_window = 10
+        upper_band     = 1
+        lower_band     = 1
+
+        bybitCurveDrawer = BybitCurveDrawer(self.strategy, self.category, self.interval, symbol, rolling_window, upper_band, lower_band)
+        bybitCurveDrawer._draw_curves()
+
 def main():
     felix = Felix()
     felix._start_backtest_engine()
+    # felix.screen_full_backtest_result()
+    # felix.manage_full_backtest_result()
+    # felix.draw_full_backtest_result_curves()
 
 if __name__ == "__main__":
     main()

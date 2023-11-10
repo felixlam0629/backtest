@@ -7,14 +7,14 @@ import requests
 import time
 
 class BybitResultScreener:
-    def __init__(self):
+    def __init__(self, strategy, category, interval):
         self.asset      = "Cryptocurrency"
         self.exchange   = "bybit"
-        self.strategy   = "bybit_funding_rate_open_interest"
-        self.category   = "linear"
-        self.interval   = "480"
-        self.price_func = "kline"
+        self.strategy   = strategy
+        self.category   = category
+        self.interval   = interval
 
+        self.price_func     = "kline"
         self.price_interval = "240"
 
     def _generate_full_symbol_backtest_report(self):
@@ -73,12 +73,11 @@ class BybitResultScreener:
         return finished_symbol_list
 
     def _generate_result_list(self, original_symbol_list, finished_symbol_list, finished_symbol_list_path):
-        asset      = self.asset
-        strategy   = self.strategy
-        exchange   = self.exchange
-        instrument = self.instrument
-        product    = self.product
-        interval   = self.interval
+        asset    = self.asset
+        exchange = self.exchange
+        strategy = self.strategy
+        category = self.category
+        interval = self.interval
 
         num_of_trade_list = []
         win_rate_list     = []
@@ -140,11 +139,11 @@ class BybitResultScreener:
                             rubbish_strat = False
                             rubbish_strat_list.append(rubbish_strat)
 
-                        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨response = fulfilled the requirement")
+                        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = fulfilled the requirement")
                         break
 
                     else:
-                        # print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨response = failed to fulfill the requirement")
+                        # print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = failed to fulfill the requirement")
                         pass
 
                 if symbol_pass == False:
@@ -168,7 +167,7 @@ class BybitResultScreener:
                     # contrary_test_list.append(contrary_test)
                     rubbish_strat_list.append(rubbish_strat)
 
-                print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨action = generated single backtest report")
+                print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨action = generated single backtest report")
                 print("**************************************************")
 
             else:
@@ -192,7 +191,7 @@ class BybitResultScreener:
                 # contrary_test_list.append(contrary_test)
                 rubbish_strat_list.append(rubbish_strat)
 
-                print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨response = without single backtest report")
+                print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = without single backtest report")
                 print("**************************************************")
 
         result_list.append(original_symbol_list)
@@ -247,10 +246,3 @@ class BybitResultScreener:
         result_df.to_csv(result_csv, index = False)
 
         print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")
-
-def main():
-    bybitResultScreener = BybitResultScreener()
-    bybitResultScreener._generate_full_symbol_backtest_report()
-    
-if __name__ == "__main__":
-    main()

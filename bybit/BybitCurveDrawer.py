@@ -2,18 +2,18 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 class BybitCurveDrawer:
-    def __init__(self):
+    def __init__(self, strategy, category, interval, symbol, rolling_window, upper_band, lower_band):
         self.asset      = "Cryptocurrency"
         self.exchange   = "bybit"
-        self.strategy   = "bybit_funding_rate_open_interest"
-        self.category   = "linear"
-        self.interval   = "480"
+        self.strategy   = strategy
+        self.category   = category
+        self.interval   = interval
+        self.symbol     = symbol
         self.price_func = "kline"
-        self.symbol     = "BTCUSD_PERP"
 
-        self.rolling_window = 10
-        self.upper_band     = 0
-        self.lower_band     = 1.75
+        self.rolling_window = rolling_window
+        self.upper_band     = upper_band
+        self.lower_band     = lower_band
 
     def _draw_curves(self):
         result_df = self._get_result_df()
@@ -58,10 +58,3 @@ class BybitCurveDrawer:
         equity_curve_path = f"{result_path}/{self.symbol}/backtest_set/full_result/{self.symbol}_{self.rolling_window}_{self.upper_band}_{self.lower_band}.png"
 
         return equity_curve_path
-
-def main():
-    bybitCurveDrawer = BybitCurveDrawer()
-    bybitCurveDrawer._draw_curves()
-
-if __name__ == "__main__":
-    main()

@@ -9,13 +9,12 @@ import shutil
 import time
 
 class BybitResultManager:
-    def __init__(self):
+    def __init__(self, strategy, category, interval):
         self.asset      = "Cryptocurrency"
         self.exchange   = "bybit"
-        self.strategy   = "bybit_funding_rate_open_interest"
-        self.category   = "linear"
-        self.interval   = "480"
-        
+        self.strategy   = strategy
+        self.category   = category
+        self.interval   = interval
         self.price_func = "kline"
 
     def _delete_useless_backtest_result(self):
@@ -55,10 +54,3 @@ class BybitResultManager:
         for symbol in delete_list:
             symbol_path = os.path.join(result_path, symbol)
             shutil.rmtree(symbol_path)
-
-def main():
-    bybitResultManager = BybitResultManager()
-    bybitResultManager._delete_useless_backtest_result()
-
-if __name__ == "__main__":
-    main()
