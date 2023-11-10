@@ -27,8 +27,8 @@ class BacktestSystem():
         self.finished_path = finished_path
 
         self.asset    = "Cryptocurrency"
-        self.strategy = "bybit_funding_rate_open_interest"
         self.exchange = "bybit"
+        self.strategy = "bybit_funding_rate_open_interest"
         self.category = "linear"
         self.interval = "480"
         self.symbol   = symbol
@@ -183,7 +183,7 @@ class BacktestSystem():
                 result = return_list[i]
                 result_dict[result_key_list[i]].append(result)
 
-        full_result_path = f"{self.finished_path}/{self.symbol}/full_result/{single_df_name}"
+        full_result_path = f"{self.finished_path}/{self.symbol}/{single_df_name}/full_result"
         self._create_folder(full_result_path)
 
         full_result_df  = pd.DataFrame(result_dict)
@@ -679,7 +679,7 @@ class BacktestSystem():
         result_path = f"{self.finished_path}/{self.symbol}"
         self._create_folder(result_path)
 
-        single_result_path = f"{result_path}/single_result/{single_df_name}"
+        single_result_path = f"{result_path}/{single_df_name}/single_result"
         self._create_folder(single_result_path)
 
         single_result_csv = f"{single_result_path}/{self.symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
@@ -847,7 +847,7 @@ class BacktestSystem():
 
     def _get_sharpe_table_path(self, single_df_dict, para_a, para_b):
         single_df_name = list(single_df_dict)[0]
-        sharpe_table_path = f"{self.finished_path}/{self.symbol}/full_result/{single_df_name}/{self.symbol}_{para_a}_{para_b}.png"
+        sharpe_table_path = f"{self.finished_path}/{self.symbol}/{single_df_name}/full_result/{self.symbol}_{para_a}_{para_b}.png"
 
         return sharpe_table_path
 
@@ -940,16 +940,17 @@ class BacktestSystem():
 
 class DataProcessor:
     def __init__(self, backtest_df_ready = False, symbol = None):
-        self.asset       = "Cryptocurrency"
-        self.strategy    = "bybit_funding_rate_open_interest"
-        self.exchange    = "bybit"
+        self.asset    = "Cryptocurrency"
+        self.exchange = "bybit"
+        self.strategy = "bybit_funding_rate_open_interest"
+        self.category = "linear"
+        self.interval = "480"
+        self.symbol   = symbol
+
         self.price_func  = "kline"
         self.fr_func     = "funding_rate"
         self.oi_func     = "open_interest"
-        self.category    = "linear"
-        self.interval    = "480"
         self.fr_interval = "240"
-        self.symbol      = symbol
 
         self.start_dt = datetime.datetime(2020, 1, 1, 0, 0, 0)
         self.end_dt   = datetime.datetime(2024, 1, 1, 0, 0, 0)
