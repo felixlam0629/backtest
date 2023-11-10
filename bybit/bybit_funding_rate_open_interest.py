@@ -38,7 +38,7 @@ class BacktestSystem():
 
         self.processes = 8
 
-    def run_full_backtest_system(self):
+    def _run_full_backtest_system(self):
         single_df_list  = self._get_single_df_list()
         para_dict       = self._get_para_dict()
         para_value_list = self._get_para_value_list(para_dict)
@@ -53,16 +53,16 @@ class BacktestSystem():
 
             pool        = mp.Pool(processes = self.processes)
             return_list = pool.map(self._contractor, all_para_combination)
-            print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = finished full backtest")
+            print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = finished full backtest")
 
             full_result_df = self._store_full_result_df(return_list, result_dict, result_key_list, single_df_dict, manager_list)
-            print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = exported backtest_report to csv")
+            print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = exported backtest_report to csv")
 
             self._draw_graphs_and_tables(full_result_df, single_df_dict, result_key_list)
-            print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = created sharpe ratio distribution table")
+            print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = created sharpe ratio distribution table")
 
         pool.close()
-        print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨action = finished backtest")
+        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨action = finished backtest")
         print("**************************************************")
 
     def _get_para_dict(self):
@@ -622,7 +622,7 @@ class BacktestSystem():
                 short_tx_fee = 0
                 short_tx_fee_list.append(short_tx_fee)
 
-        print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨({rolling_window}, {upper_band}, {lower_band})丨action = finished backtest")
+        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨({rolling_window}, {upper_band}, {lower_band})丨action = finished backtest")
 
         single_result_list.append(single_df)
         single_result_list.append(signal_list)
@@ -776,6 +776,7 @@ class BacktestSystem():
         return_list.append(short_calmar)
 
         return return_list
+    
     def _get_dd_list(self, pnl_list):
         cum_pnl_list = np.cumsum(pnl_list)
 
@@ -958,12 +959,12 @@ class DataProcessor:
 
         self.backtest_df_ready = backtest_df_ready
 
-    def put_data_into_backtest_system(self):
+    def _put_data_into_backtest_system(self):
         backtest_df   = self.get_formatted_backtest_df()
         finished_path = self.get_finished_path()
 
         backtestSystem = BacktestSystem(backtest_df, finished_path, self.symbol)
-        backtestSystem.run_full_backtest_system()
+        backtestSystem._run_full_backtest_system()
 
     def _create_folder(self, folder):
         """ This function is used to create the folder from the path.
@@ -1014,7 +1015,7 @@ class DataProcessor:
         return finished_list
 
     def get_finished_path(self):
-        finished_path = f"D:/backtest/{self.asset}/{self.strategy}/{self.exchange}/{self.price_func}/{self.category}/{self.interval}"
+        finished_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}"
 
         return finished_path
 
@@ -1185,7 +1186,7 @@ def main():
 
         try:
             dataProcessor = DataProcessor(backtest_df_ready, symbol)
-            dataProcessor.put_data_into_backtest_system()
+            dataProcessor._put_data_into_backtest_system()
 
         except StopIteration:
             pass
