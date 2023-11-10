@@ -4,9 +4,8 @@ single_result -> inside multiprocessing
 full_result   -> outside multiprocessing
 
 Issue
-2. Divide the backtest_df into 3 df -> 1) single_training_df, 2) single_testing_df, 3) single_backtest_df
-3) Synchornize start_int and end_int in above cases
-
+1) Divide the backtest_df into 3 df -> 1) single_training_df, 2) single_testing_df, 3) single_backtest_df
+2) rolling window no need for 2) single_testing_df
 """
 
 import calendar
@@ -45,28 +44,32 @@ class BacktestSystem():
         self.binance_tx_fee_rate = 0.0002
         self.ann_multiple        = 365 * 3
 
-        self.processes = 1
+        self.processes = 8
 
-    def run_backtest(self):
-        single_backtest_df   = self.single_backtest_df
-        manager_list         = self._get_manager_list()
-        para_dict            = self._get_para_dict()
-        para_list            = self._get_para_list(para_dict)
-        all_para_combination = self._get_all_para_combination(para_list, single_backtest_df, manager_list)
-        result_dict          = self._get_result_dict(para_dict)
-        para_dict_key_list   = self._get_para_dict_key_list(result_dict)
+    def run_full_backtest_system(self):
+        single_df_list  = self._get_single_df_list()
+        para_dict       = self._get_para_dict()
+        para_value_list = self._get_para_value_list(para_dict)
 
-        pool        = mp.Pool(processes = self.processes)
-        return_list = pool.map(self._contractor, all_para_combination)
+        for single_df_dict in single_df_list:
+            single_df_name = list(single_df_dict)[0]
+
+            manager_list         = self._get_manager_list()
+            result_dict          = self._get_result_dict(para_dict)
+            result_key_list      = self._get_result_key_list(result_dict)
+            all_para_combination = self._get_all_para_combination(single_df_dict, para_value_list, manager_list)
+
+            pool           = mp.Pool(processes = self.processes)
+            return_list    = pool.map(self._contractor, all_para_combination)
+            print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = finished full backtest")
+
+            full_result_df = self._store_full_result_df(return_list, result_dict, result_key_list, single_df_dict, manager_list)
+            print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = exported backtest_report to csv")
+
+            self._draw_graphs_and_tables(full_result_df, single_df_dict, result_key_list)
+            print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = created sharpe ratio distribution table")
+
         pool.close()
-
-        result_df = self._store_backtest_result_df(return_list, result_dict, para_dict_key_list, manager_list)
-        self._draw_graphs_and_tables(result_df, para_dict_key_list)
-
-        # return_list = self._get_return_list(all_para_combination)
-        # print(strategy, symbol, interval, category, exchange, asset, "action = finished full backtest")
-        # print(strategy, symbol, interval, category, exchange, asset, "action = exported backtest_report to csv")
-        # print(strategy, symbol, interval, category, exchange, asset, "action = created sharpe ratio distribution table")
 
     def _get_para_dict(self):
 
@@ -90,19 +93,36 @@ class BacktestSystem():
 
         return manager_list
 
-    def _get_para_list(self, para_dict):
-        para_list = list(para_dict.values())
+    def _get_para_value_list(self, para_dict):
+        para_value_list = list(para_dict.values())
 
-        return para_list
+        return para_value_list
 
-    def _get_all_para_combination(self, para_list, single_df, manager_list):
-        all_para_combination = list(itertools.product(*para_list))
+    def _get_single_df_list(self):
+        single_df_list = []
+
+        single_df_dict = {}
+        single_df_dict["backtest_set"] = self.single_backtest_df
+        single_df_list.append(single_df_dict)
+
+        single_df_dict = {}
+        single_df_dict["training_set"] = self.single_training_df
+        single_df_list.append(single_df_dict)
+
+        single_df_dict = {}
+        single_df_dict["testing_set"]  = self.single_testing_df.reset_index(drop = True)
+        single_df_list.append(single_df_dict)
+
+        return single_df_list
+
+    def _get_all_para_combination(self, single_df_dict, para_value_list, manager_list):
+        all_para_combination = list(itertools.product(*para_value_list))
 
         for i in range(len(all_para_combination)):
             para_combination = all_para_combination[i]
             para_combination = list(para_combination)
 
-            para_combination.append(single_df)
+            para_combination.append(single_df_dict)
             para_combination.append(manager_list)
 
             all_para_combination[i] = para_combination
@@ -140,55 +160,46 @@ class BacktestSystem():
 
         return result_dict
 
-    def _get_para_dict_key_list(self, result_dict):
-        para_dict_key_list = list(result_dict)
+    def _get_result_key_list(self, result_dict):
+        result_key_list = list(result_dict)
 
-        return para_dict_key_list
+        return result_key_list
 
-    def _store_backtest_result_df(self, return_list, result_dict, para_dict_key_list, manager_list):
-        finished_path = self.finished_path
-
-        symbol = self.symbol
+    def _store_full_result_df(self, return_list, result_dict, result_key_list, single_df_dict, manager_list):
+        single_df_name = list(single_df_dict)[0]
 
         for return_list in manager_list:
             for i in range(len(return_list)):
                 result = return_list[i]
-                result_dict[para_dict_key_list[i]].append(result)
+                result_dict[result_key_list[i]].append(result)
 
-        full_result_path = f"{finished_path}/{symbol}/full_result"
+        full_result_path = f"{self.finished_path}/{self.symbol}/full_result/{single_df_name}"
         self._create_folder(full_result_path)
 
-        result_df  = pd.DataFrame(result_dict)
-        result_df  = result_df.sort_values(by = "strat_sharpe", ascending = False)
-        result_csv = f"{full_result_path}/{symbol}.csv"
-        result_df.to_csv(result_csv, index = False)
+        full_result_df  = pd.DataFrame(result_dict)
+        full_result_df  = full_result_df.sort_values(by = "strat_sharpe", ascending = False)
+        full_result_csv = f"{full_result_path}/{self.symbol}.csv"
+        full_result_df.to_csv(full_result_csv, index = False)
 
-        return result_df
+        return full_result_df
 
     def _contractor(self, para_combination):
         if len(para_combination) > 1:
+            return_list  = []
             manager_list = para_combination[-1]
-            manager_list.append(self.backtest(para_combination[0:-1]))
+            return_list  = self._start_single_backtest(para_combination[0:-1])
+            manager_list.append(return_list)
 
-    def backtest(self, para_combination):
+    def _start_single_backtest(self, para_combination):
         base_csv_existed, base_csv = self._check_base_csv(para_combination)
 
         if base_csv_existed == False:
-            backtest_ready_list = self.get_backtest_ready_list_without_base_csv(para_combination)
+            backtest_ready_list = self._get_backtest_ready_list_without_base_csv(para_combination)
 
         else:
-            backtest_ready_list = self.get_backtest_ready_list_with_base_csv(base_csv, para_combination) # start_int and end_int issue
+            backtest_ready_list = self._get_backtest_ready_list_with_base_csv(base_csv, para_combination)
 
-        """
-        df_list = []
-
-        df_list.append(df)
-        df_list.append(training_df)
-        df_list.append(testing_df)
-        """
-
-        # for backtest_df in df_list: # the bt_ready is not same as the backtest_df
-        single_result_list = self.get_single_result_list(backtest_ready_list, base_csv_existed, para_combination)
+        single_result_list = self._get_single_result_list(backtest_ready_list, base_csv_existed, para_combination)
         single_result_df   = self._get_single_result_df(single_result_list)
         self._store_single_result_df(single_result_df, para_combination)
 
@@ -200,10 +211,11 @@ class BacktestSystem():
         rolling_window = para_combination[0]
         upper_band     = para_combination[1]
         lower_band     = para_combination[2]
+        single_df_name = list(para_combination[3])[0]
 
         base_csv_existed = False
 
-        base_path = f"{self.finished_path}/{self.symbol}/single_result"
+        base_path = f"{self.finished_path}/{self.symbol}/single_result/{single_df_name}"
         base_csv  = f"{base_path}/{self.symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
 
         if os.path.isfile(base_csv) == True:
@@ -211,11 +223,13 @@ class BacktestSystem():
 
         return base_csv_existed, base_csv
 
-    def get_backtest_ready_list_without_base_csv(self, para_combination):
-        single_df["ma"]      = self.single_df["fr_oi"].rolling(self.rolling_window).mean()
-        single_df["sd"]      = self.single_df["fr_oi"].rolling(self.rolling_window).std()
-        single_df["z_score"] = (self.single_df["fr_oi"] - self.single_df["ma"]) / self.single_df["sd"]
-        # df.dropna(inplace = True)
+    def _get_backtest_ready_list_without_base_csv(self, para_combination):
+        rolling_window = para_combination[0]
+        single_df      = list(para_combination[3].values())[0]
+
+        single_df["ma"]      = single_df["fr_oi"].rolling(rolling_window).mean()
+        single_df["sd"]      = single_df["fr_oi"].rolling(rolling_window).std()
+        single_df["z_score"] = (single_df["fr_oi"] - single_df["ma"]) / single_df["sd"]
 
         long_pos_opened  = False
         short_pos_opened = False
@@ -242,7 +256,7 @@ class BacktestSystem():
 
         return backtest_ready_list
 
-    def get_backtest_ready_list_with_base_csv(self, base_csv, para_combination):
+    def _get_backtest_ready_list_with_base_csv(self, base_csv, para_combination):
         base_df = pd.read_csv(base_csv)
 
         signal = base_df["signal"].iloc[-1]
@@ -281,20 +295,12 @@ class BacktestSystem():
 
         return backtest_ready_list
 
-    def get_single_result_list(self, backtest_ready_list, base_csv_existed, para_combination):
-        # df = backtest_df
-        single_df = self.single_backtest_df
-
-        asset    = self.asset
-        strategy = self.strategy
-        exchange = self.exchange
-        category = self.category
-        interval = self.interval
-        symbol   = self.symbol
-
+    def _get_single_result_list(self, backtest_ready_list, base_csv_existed, para_combination):
         rolling_window = para_combination[0]
         upper_band     = para_combination[1]
         lower_band     = para_combination[2]
+        single_df_name = list(para_combination[3])[0]
+        single_df      = list(para_combination[3].values())[0]
 
         open_price        = 0
         close_price       = 0
@@ -606,7 +612,7 @@ class BacktestSystem():
                 short_tx_fee = 0
                 short_tx_fee_list.append(short_tx_fee)
 
-        print(strategy, symbol, interval, category, exchange, asset, "action = finished backtest", "(", rolling_window, upper_band, lower_band, ")", )
+        print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨({rolling_window}, {upper_band}, {lower_band})丨action = finished backtest")
 
         single_result_list.append(single_df)
         single_result_list.append(signal_list)
@@ -658,19 +664,18 @@ class BacktestSystem():
         rolling_window = para_combination[0]
         upper_band     = para_combination[1]
         lower_band     = para_combination[2]
+        single_df_name = list(para_combination[3])[0]
 
         result_path = f"{self.finished_path}/{self.symbol}"
         self._create_folder(result_path)
 
-        single_result_path = f"{result_path}/single_result"
+        single_result_path = f"{result_path}/single_result/{single_df_name}"
         self._create_folder(single_result_path)
 
         single_result_csv = f"{single_result_path}/{self.symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
         single_result_df.to_csv(single_result_csv, index = False)
 
     def _calculate_performance_matrix(self, single_result_list, para_combination):
-        binance_tx_fee_rate = self.binance_tx_fee_rate
-
         signal_list = single_result_list[1]
 
         long_trading_pnl_list  = single_result_list[2]
@@ -829,24 +834,21 @@ class BacktestSystem():
         if os.path.isdir(folder) == False:
             os.mkdir(folder)
 
-    def _get_sharpe_table_path(self, para_a, para_b):
-        finished_path = self.finished_path
-
-        symbol = self.symbol
-
-        sharpe_table_path = f"{finished_path}/{symbol}/full_result/{symbol}_{para_a}_{para_b}.png"
+    def _get_sharpe_table_path(self, single_df_dict, para_a, para_b):
+        single_df_name = list(single_df_dict)[0]
+        sharpe_table_path = f"{self.finished_path}/{self.symbol}/full_result/{single_df_name}/{self.symbol}_{para_a}_{para_b}.png"
 
         return sharpe_table_path
 
-    def _draw_graphs_and_tables(self, result_df, para_dict_key_list):
-        para_a = para_dict_key_list[0]
-        para_b = para_dict_key_list[1]
-        para_c = para_dict_key_list[2]
+    def _draw_graphs_and_tables(self, full_result_df, single_df_dict, result_key_list):
+        para_a = result_key_list[0]
+        para_b = result_key_list[1]
+        para_c = result_key_list[2]
 
         table_dict = {}
         table_list = []
 
-        table_ab = result_df[(result_df[para_c] == 1.75)]
+        table_ab = full_result_df[(full_result_df[para_c] == 1)]
         table_ab = table_ab.pivot(index = para_a, columns = para_b, values = "strat_sharpe")
         table_dict["table"]  = table_ab
         table_dict["para_a"] = para_a
@@ -854,7 +856,7 @@ class BacktestSystem():
         table_list.append(table_dict)
 
         table_dict = {}
-        table_ac = result_df[(result_df[para_b] == 4)]
+        table_ac = full_result_df[(full_result_df[para_b] == 4)]
         table_ac = table_ac.pivot(index = para_a, columns = para_c, values = "strat_sharpe")
         table_dict["table"]  = table_ac
         table_dict["para_a"] = para_a
@@ -862,7 +864,7 @@ class BacktestSystem():
         table_list.append(table_dict)
 
         table_dict = {}
-        table_bc = result_df[(result_df[para_a] == 10)]
+        table_bc = full_result_df[(full_result_df[para_a] == 10)]
         table_bc = table_bc.pivot(index = para_b, columns = para_c, values = "strat_sharpe")
         table_dict["table"]  = table_bc
         table_dict["para_a"] = para_b
@@ -870,9 +872,9 @@ class BacktestSystem():
         table_list.append(table_dict)
 
         for table_dict in table_list:
-            self._draw_sharpe_distribution_table(table_dict)
+            self._draw_and_save_sharpe_distribution_table(single_df_dict, table_dict)
 
-    def _draw_sharpe_distribution_table(self, table_dict):
+    def _draw_and_save_sharpe_distribution_table(self, single_df_dict, table_dict):
         table  = table_dict["table"]
         para_x = table_dict["para_a"]
         para_y = table_dict["para_b"]
@@ -890,7 +892,7 @@ class BacktestSystem():
             for j in range(len(table.columns)):
                 plt.text(j, i, f"{table.iloc[i, j]:.2f}", ha = "center", va = "center", color = "black")
 
-        sharpe_table_path = self._get_sharpe_table_path(para_x, para_y)
+        sharpe_table_path = self._get_sharpe_table_path(single_df_dict, para_x, para_y)
         plt.savefig(sharpe_table_path)
         # plt.show()
 
@@ -949,10 +951,9 @@ class DataProcessor:
     def put_data_into_backtest_system(self):
         backtest_df   = self.get_formatted_backtest_df()
         finished_path = self.get_finished_path()
-        symbol        = self.symbol
 
-        backtestSystem = BacktestSystem(backtest_df, finished_path, symbol)
-        backtestSystem.run_backtest()
+        backtestSystem = BacktestSystem(backtest_df, finished_path, self.symbol)
+        backtestSystem.run_full_backtest_system()
 
     def _create_folder(self, folder):
         """ This function is used to create the folder from the path.
@@ -965,29 +966,22 @@ class DataProcessor:
             os.mkdir(folder)
 
     def _create_folders(self):
-        asset    = self.asset
-        strategy = self.strategy
-        exchange = self.exchange
-        function = self.price_func
-        category = self.category
-        interval = self.interval
-
-        base_folder = "D:\\backtest\\" + asset
+        base_folder = "D:\\backtest\\" + self.asset
         self._create_folder(base_folder)
 
-        zero_folder = f"{base_folder}/{strategy}"
+        zero_folder = f"{base_folder}/{self.strategy}"
         self._create_folder(zero_folder)
 
-        first_folder = f"{zero_folder}/{exchange}"
+        first_folder = f"{zero_folder}/{self.exchange}"
         self._create_folder(first_folder)
 
-        second_folder = f"{first_folder}/{function}"
+        second_folder = f"{first_folder}/{self.function}"
         self._create_folder(second_folder)
 
-        third_folder = f"{second_folder}/{category}"
+        third_folder = f"{second_folder}/{self.category}"
         self._create_folder(third_folder)
 
-        fourth_folder = f"{third_folder}/{interval}"
+        fourth_folder = f"{third_folder}/{self.interval}"
         self._create_folder(fourth_folder)
 
     def _get_symbol_list(self):
@@ -1010,43 +1004,25 @@ class DataProcessor:
         return finished_list
 
     def get_finished_path(self):
-        asset    = self.asset
-        strategy = self.strategy
-        exchange = self.exchange
-        function = self.price_func
-        category = self.category
-        interval = self.interval
-
-        finished_path = f"D:/backtest/{asset}/{strategy}/{exchange}/{function}/{category}/{interval}"
+        finished_path = f"D:/backtest/{self.asset}/{self.strategy}/{self.exchange}/{self.price_func}/{self.category}/{self.interval}"
 
         return finished_path
 
     def _get_price_df(self):
-        symbol = self.symbol
-
-        start_int = self.start_int
-        end_int   = self.end_int
-
         price_path = self._get_price_path()
-        price_csv  = f"{price_path}/{symbol}.csv"
+        price_csv  = f"{price_path}/{self.symbol}.csv"
 
         price_df = pd.read_csv(price_csv)
         price_df = price_df[["time", "datetime", "open"]]
         price_df = price_df.round({"open_time": -3})
         price_df.rename(columns = {"open_time": "time"}, inplace = True)
 
-        price_df = price_df[(price_df["time"] >= start_int) & (price_df["time"] <= end_int)]
+        price_df = price_df[(price_df["time"] >= self.start_int) & (price_df["time"] <= self.end_int)]
 
         return price_df
 
     def _get_price_path(self):
-        asset    = self.asset
-        exchange = self.exchange
-        function = self.price_func
-        category = self.category
-        interval = self.interval
-
-        price_path = f"D:/{asset}/{exchange}/{function}/{category}/{interval}"
+        price_path = f"D:/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.interval}"
 
         return price_path
 
@@ -1077,7 +1053,7 @@ class DataProcessor:
                 message = str(message)
                 self._send_tg_msg_to_backtest_channel(message)
 
-            print(strategy, symbol, interval, category, function, exchange, asset, "response = failed backtest, reason = without funding_rate data file")
+            print(strategy, symbol, interval, category, function, exchange, "response = failed backtest, reason = without funding_rate data file")
             print("**************************************************")
 
             raise StopIteration
@@ -1085,13 +1061,9 @@ class DataProcessor:
         return funding_rate_df
 
     def _get_funding_rate_path(self):
-        asset    = self.asset
-        exchange = self.exchange
-        function = self.fr_func
-        category = self.category
         interval = "480"
 
-        funding_rate_path = f"D:/{asset}/{exchange}/{function}/{category}/{interval}"
+        funding_rate_path = f"D:/{self.asset}/{self.exchange}/{self.fr_func}/{self.category}/{interval}"
 
         return funding_rate_path
 
@@ -1123,7 +1095,7 @@ class DataProcessor:
                 message = str(message)
                 self._send_tg_msg_to_backtest_channel(message)
 
-            print(strategy, symbol, interval, category, function, exchange, asset, "response = failed backtest, reason = without open_interest data file")
+            print(strategy, symbol, interval, category, function, exchange, "response = failed backtest, reason = without open_interest data file")
             print("**************************************************")
 
             raise StopIteration
@@ -1131,13 +1103,9 @@ class DataProcessor:
         return open_interest_df
 
     def get_open_interest_path(self):
-        asset    = self.asset
-        exchange = self.exchange
-        function = self.oi_func
-        category = self.category
         interval = "4h"
 
-        open_interest_path = f"D:/{asset}/{exchange}/{function}/{category}/{interval}"
+        open_interest_path = f"D:/{self.asset}/{self.exchange}/{self.oi_func}/{self.category}/{interval}"
 
         return open_interest_path
 
