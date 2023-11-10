@@ -21,7 +21,7 @@ pd.set_option('display.width', 320)
 
 class BacktestSystem():
     def __init__(self, single_backtest_df, finished_path, symbol):
-        self.split_index        = int(0.8 * len(single_backtest_df))
+        self.df_split_index     = int(0.8 * len(single_backtest_df))
         self.single_backtest_df = single_backtest_df
 
         self.finished_path = finished_path
@@ -30,7 +30,7 @@ class BacktestSystem():
         self.strategy = "bybit_funding_rate_open_interest"
         self.exchange = "bybit"
         self.category = "linear"
-        self.interval = "240"
+        self.interval = "480"
         self.symbol   = symbol
 
         self.binance_tx_fee_rate = 0.0002
@@ -66,7 +66,7 @@ class BacktestSystem():
         print("**************************************************")
 
     def _get_para_dict(self):
-
+        """
         para_dict = {
             "rolling_window" : [10, 20, 30], # rw cannot be 0
             "upper_band"     : [0, 1, 2, 3, 4],
@@ -75,10 +75,10 @@ class BacktestSystem():
         """
         para_dict = {
             "rolling_window" : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], # rw cannot be 0
-            "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5],
-            "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5]
+            "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4],
+            "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4]
         }
-        """
+
 
         return para_dict
 
@@ -124,11 +124,11 @@ class BacktestSystem():
                 single_df_dict["backtest_set"] = single_backtest_df
 
             elif single_df_name == "training_set":
-                single_training_df = self.single_backtest_df.iloc[:self.split_index]
+                single_training_df = self.single_backtest_df.iloc[:self.df_split_index]
                 single_df_dict["training_set"] = single_training_df
 
             elif single_df_name == "testing_set":
-                single_testing_df = self.single_backtest_df.iloc[(self.split_index - rolling_window):]
+                single_testing_df = self.single_backtest_df.iloc[(self.df_split_index - rolling_window):]
                 single_testing_df = single_testing_df.reset_index(drop = True)
                 single_df_dict["testing_set"] = single_testing_df
 
@@ -940,15 +940,16 @@ class BacktestSystem():
 
 class DataProcessor:
     def __init__(self, backtest_df_ready = False, symbol = None):
-        self.asset      = "Cryptocurrency"
-        self.strategy   = "bybit_funding_rate_open_interest"
-        self.exchange   = "bybit"
-        self.price_func = "kline"
-        self.fr_func    = "funding_rate"
-        self.oi_func    = "open_interest"
-        self.category   = "linear"
-        self.interval   = "240" # 4h for open_interest
-        self.symbol     = symbol
+        self.asset       = "Cryptocurrency"
+        self.strategy    = "bybit_funding_rate_open_interest"
+        self.exchange    = "bybit"
+        self.price_func  = "kline"
+        self.fr_func     = "funding_rate"
+        self.oi_func     = "open_interest"
+        self.category    = "linear"
+        self.interval    = "480"
+        self.fr_interval = "240"
+        self.symbol      = symbol
 
         self.start_dt = datetime.datetime(2020, 1, 1, 0, 0, 0)
         self.end_dt   = datetime.datetime(2024, 1, 1, 0, 0, 0)
@@ -1033,7 +1034,7 @@ class DataProcessor:
         return price_df
 
     def _get_price_path(self):
-        price_path = f"D:/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.interval}"
+        price_path = f"D:/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.fr_interval}"
 
         return price_path
 
