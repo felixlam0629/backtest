@@ -144,7 +144,7 @@ class BybitResultScreener:
                         break
 
                     else:
-                        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨response = failed to fulfill the requirement")
+                        # print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨response = failed to fulfill the requirement")
                         pass
 
                 if symbol_pass == False:
@@ -246,7 +246,7 @@ class BybitResultScreener:
         result_csv = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}/backtest_set/full_result/full_symbol_backtest_result.csv"
         result_df.to_csv(result_csv, index = False)
 
-        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨action = exported full_symbol_backtest_result to csv")
+        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")
 
 def main():
     bybitResultScreener = BybitResultScreener()

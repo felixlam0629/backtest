@@ -1,3 +1,7 @@
+"""
+1) # should add type in the path? for coinm_fut vs usdum_fut
+"""
+
 import datetime
 import numpy as np
 import os
@@ -9,8 +13,8 @@ import time
 class BacktestResultScreener:
     def __init__(self):
         self.asset      = "Cryptocurrency"
-        self.strategy   = "testing_basis_index_price_open_interest"
         self.exchange   = "binance"
+        self.strategy   = "testing_basis_index_price_open_interest"
         self.instrument = "futures"
         self.product    = "coinm_futures"
         self.type       = "PERPETUAL"
@@ -18,7 +22,7 @@ class BacktestResultScreener:
         self.interval   = "8h"
 
     def _generate_full_symbol_backtest_report(self):
-        original_symbol_list_path = self.get_original_symbol_list_path()
+        original_symbol_list_path = self._get_original_symbol_list_path()
         finished_symbol_list_path = self.get_finished_symbol_list_path()
 
         original_symbol_list = self._get_original_symbol_list()
@@ -44,20 +48,13 @@ class BacktestResultScreener:
     
         return file_list
     
-    def get_original_symbol_list_path(self):
-        asset      = self.asset
-        exchange   = self.exchange
-        instrument = self.instrument
-        product    = self.product
-        function   = self.price_func
-        interval   = self.interval
-
-        original_symbol_list_path = f"D:/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
+    def _get_original_symbol_list_path(self):
+        original_symbol_list_path = f"D:/{self.asset}/{self.exchange}/{self.instrument}/{self.product}/{self.price_func}/{self.interval}"
 
         return original_symbol_list_path
     
     def _get_original_symbol_list(self):
-        original_symbol_list_path = self.get_original_symbol_list_path()
+        original_symbol_list_path = self._get_original_symbol_list_path()
         original_symbol_list      = self._get_file_list(original_symbol_list_path)
 
         backtested_symbol_list = []
@@ -69,14 +66,7 @@ class BacktestResultScreener:
         return backtested_symbol_list
     
     def get_finished_symbol_list_path(self):
-        asset      = self.asset
-        strategy   = self.strategy
-        exchange   = self.exchange
-        instrument = self.instrument
-        product    = self.product
-        interval   = self.interval
-    
-        finished_symbol_list_path = f"D:/backtest/{asset}/{strategy}/{exchange}/{instrument}/{product}/{interval}"
+        finished_symbol_list_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.instrument}/{self.product}/{self.interval}"
 
         return finished_symbol_list_path
 
@@ -154,11 +144,11 @@ class BacktestResultScreener:
                             rubbish_strat = False
                             rubbish_strat_list.append(rubbish_strat)
 
-                        print(strategy, symbol, interval, product, instrument, exchange, asset, "response = fulfilled the requirement")
+                        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = fulfilled the requirement")
                         break
 
                     else:
-                        # print(strategy, symbol, interval, product, instrument, exchange, asset, "response = failed to fulfill the requirement")
+                        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = failed to fulfill the requirement")
                         pass
 
                 if symbol_pass == False:
@@ -182,7 +172,7 @@ class BacktestResultScreener:
                     # contrary_test_list.append(contrary_test)
                     rubbish_strat_list.append(rubbish_strat)
 
-                print(strategy, symbol, interval, product, instrument, exchange, asset, "action = generated single backtest report")
+                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = generated single backtest report")
                 print("**************************************************")
 
             else:
@@ -206,7 +196,7 @@ class BacktestResultScreener:
                 # contrary_test_list.append(contrary_test)
                 rubbish_strat_list.append(rubbish_strat)
 
-                print(strategy, symbol, interval, product, instrument, exchange, asset, "response = without single backtest report")
+                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = without single backtest report")
                 print("**************************************************")
 
         result_list.append(original_symbol_list)
@@ -257,17 +247,11 @@ class BacktestResultScreener:
         return result_df
 
     def _store_result_df(self, result_df):
-        asset      = self.asset
-        strategy   = self.strategy
-        exchange   = self.exchange
-        instrument = self.instrument
-        product    = self.product
-        interval   = self.interval
-
-        result_csv = f"D:/backtest/{asset}/{strategy}/{exchange}/{instrument}/{product}/{interval}/full_symbol_backtest_result.csv"
+        result_csv = f"D:/backtest/{self.asset}/{self.strategy}/{self.exchange}/{self.instrument}/{self.product}/{self.interval}/backtest_set/full_symbol_backtest_result.csv"
         result_df.to_csv(result_csv, index=False)
 
-        print(strategy, interval, product, instrument, exchange, asset, "action = exported full_symbol_backtest_result to csv")
+        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")
+
 
 def main():
     backtestResultScreener = BacktestResultScreener()

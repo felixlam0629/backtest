@@ -1,3 +1,4 @@
+
 import datetime
 import numpy as np
 import os
@@ -7,16 +8,15 @@ import requests
 import shutil
 import time
 
-class BinanceResultManager:
+class BybitResultManager:
     def __init__(self):
         self.asset      = "Cryptocurrency"
-        self.exchange   = "binance"
-        self.strategy   = "testing_basis_index_price_open_interest"
-        self.instrument = "futures"
-        self.product    = "coinm_futures"
-        self.type       = "PERPETUAL"
+        self.exchange   = "bybit"
+        self.strategy   = "bybit_funding_rate_open_interest"
+        self.category   = "linear"
+        self.interval   = "480"
+        
         self.price_func = "kline"
-        self.interval   = "8h"
 
     def _delete_useless_backtest_result(self):
         full_symbol_result_df = self._get_full_symbol_result_df()
@@ -24,7 +24,7 @@ class BinanceResultManager:
         self._delete_folders(delete_list)
 
     def _get_full_symbol_result_path(self):
-        full_symbol_result_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.instrument}/{self.product}/{self.interval}"
+        full_symbol_result_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}"
 
         return full_symbol_result_path
 
@@ -57,8 +57,8 @@ class BinanceResultManager:
             shutil.rmtree(symbol_path)
 
 def main():
-    binanceResultManager = BinanceResultManager()
-    binanceResultManager._delete_useless_backtest_result()
+    bybitResultManager = BybitResultManager()
+    bybitResultManager._delete_useless_backtest_result()
 
 if __name__ == "__main__":
     main()
