@@ -4,10 +4,8 @@ single_result -> inside multiprocessing
 full_result   -> outside multiprocessing
 
 Issue
-1) Return all the things from backtest function -> then do the next step instead of doing sth in the backtest function
-2. Divide the backtest_df into 3 df -> 1) training_df, 2) testing_df, 3) full_df
-3) Rename the df name to avoid confusion
-4) Synchornize start_int and end_int in above cases
+2. Divide the backtest_df into 3 df -> 1) single_training_df, 2) single_testing_df, 3) single_backtest_df
+3) Synchornize start_int and end_int in above cases
 
 """
 
@@ -29,8 +27,11 @@ pd.set_option('display.max_rows', None)
 pd.set_option('display.width', 320)
 
 class BacktestSystem():
-    def __init__(self, df, finished_path, symbol):
-        self.df = df
+    def __init__(self, single_backtest_df, finished_path, symbol):
+        split_index             = int(0.8 * len(single_backtest_df))
+        self.single_backtest_df = single_backtest_df
+        self.single_training_df = single_backtest_df.iloc[:split_index]
+        self.single_testing_df  = single_backtest_df.iloc[split_index:]
 
         self.finished_path = finished_path
 
@@ -47,111 +48,25 @@ class BacktestSystem():
         self.processes = 1
 
     def run_backtest(self):
-        df = self.df
-
-        asset    = self.asset
-        strategy = self.strategy
-        exchange = self.exchange
-        category = self.category
-        interval = self.interval
-        symbol   = self.symbol
-
-        manager_list = self._get_manager_list()
-        para_dict    = self._get_para_dict()
-
+        single_backtest_df   = self.single_backtest_df
+        manager_list         = self._get_manager_list()
+        para_dict            = self._get_para_dict()
         para_list            = self._get_para_list(para_dict)
-        all_para_combination = self._get_all_para_combination(para_list, df, manager_list)
+        all_para_combination = self._get_all_para_combination(para_list, single_backtest_df, manager_list)
+        result_dict          = self._get_result_dict(para_dict)
+        para_dict_key_list   = self._get_para_dict_key_list(result_dict)
 
-        result_dict        = self._get_result_dict(para_dict)
-        para_dict_key_list = self._get_para_dict_key_list(result_dict)
-
-        # return_list = self._get_return_list(all_para_combination)
-        processes  = self.processes
-        contractor = self.contractor
-
-        pool        = mp.Pool(processes = processes)
-        return_list = pool.map(contractor, all_para_combination)
+        pool        = mp.Pool(processes = self.processes)
+        return_list = pool.map(self._contractor, all_para_combination)
         pool.close()
 
-        print(strategy, symbol, interval, category, exchange, asset, "action = finished full backtest")
-
         result_df = self._store_backtest_result_df(return_list, result_dict, para_dict_key_list, manager_list)
-        print(strategy, symbol, interval, category, exchange, asset, "action = exported backtest_report to csv")
-
         self._draw_graphs_and_tables(result_df, para_dict_key_list)
-        print(strategy, symbol, interval, category, exchange, asset, "action = created sharpe ratio distribution table")
 
-    def _draw_graphs_and_tables(self, result_df, para_dict_key_list):
-        para_a = para_dict_key_list[0]
-        para_b = para_dict_key_list[1]
-        para_c = para_dict_key_list[2]
-
-        table_dict = {}
-        table_list = []
-
-        table_ab = result_df[(result_df[para_c] == 1.75)]
-        table_ab = table_ab.pivot(index = para_a, columns = para_b, values = "strat_sharpe")
-        table_dict["table"]  = table_ab
-        table_dict["para_a"] = para_a
-        table_dict["para_b"] = para_b
-        table_list.append(table_dict)
-
-        table_dict = {}
-        table_ac = result_df[(result_df[para_b] == 4)]
-        table_ac = table_ac.pivot(index = para_a, columns = para_c, values = "strat_sharpe")
-        table_dict["table"]  = table_ac
-        table_dict["para_a"] = para_a
-        table_dict["para_b"] = para_c
-        table_list.append(table_dict)
-
-        table_dict = {}
-        table_bc = result_df[(result_df[para_a] == 10)]
-        table_bc = table_bc.pivot(index = para_b, columns = para_c, values = "strat_sharpe")
-        table_dict["table"]  = table_bc
-        table_dict["para_a"] = para_b
-        table_dict["para_b"] = para_c
-        table_list.append(table_dict)
-
-        for table_dict in table_list:
-            self._draw_sharpe_distribution_table(table_dict)
-
-    def _draw_sharpe_distribution_table(self, table_dict):
-        table  = table_dict["table"]
-        para_x = table_dict["para_a"]
-        para_y = table_dict["para_b"]
-
-        plt.figure(figsize = (20, 8))
-        plt.imshow(table, cmap = "PuBu", aspect = "auto")
-        plt.colorbar()
-        plt.title("Sharpe Ratio Distribution")
-        plt.xlabel(para_y)
-        plt.ylabel(para_x)
-        plt.xticks(range(len(table.columns)), table.columns, rotation = "vertical")
-        plt.yticks(range(len(table.index)), table.index)
-
-        for i in range(len(table.index)):
-            for j in range(len(table.columns)):
-                plt.text(j, i, f"{table.iloc[i, j]:.2f}", ha = "center", va = "center", color = "black")
-
-        sharpe_table_path = self._get_sharpe_table_path(para_x, para_y)
-        plt.savefig(sharpe_table_path)
-        # plt.show()
-
-        """
-        # PuBu -> Blue, Yellow, for investors
-        # BuGn -> Green, for investors
-
-        # RdYlGn -> Green, Yellow, Red -> for myself
-        # YlGn   -> Green, Yellow      -> for myself
-        
-        self.create_sharpe_ratio_surface(result_df, para1, para2, para3, "SR")
-        """
-
-    def calculate_sharpe_stats(self, result_df, para1, para2):
-        grouped = result_df.groupby([para1, para2])
-        stats   = grouped["strat_sharpe"].describe()
-
-        return stats
+        # return_list = self._get_return_list(all_para_combination)
+        # print(strategy, symbol, interval, category, exchange, asset, "action = finished full backtest")
+        # print(strategy, symbol, interval, category, exchange, asset, "action = exported backtest_report to csv")
+        # print(strategy, symbol, interval, category, exchange, asset, "action = created sharpe ratio distribution table")
 
     def _get_para_dict(self):
 
@@ -180,15 +95,14 @@ class BacktestSystem():
 
         return para_list
 
-    def _get_all_para_combination(self, para_list, df, manager_list):
+    def _get_all_para_combination(self, para_list, single_df, manager_list):
         all_para_combination = list(itertools.product(*para_list))
 
-        # Add df (backtesting object that is out of para_dict)0
         for i in range(len(all_para_combination)):
             para_combination = all_para_combination[i]
             para_combination = list(para_combination)
 
-            para_combination.append(df)
+            para_combination.append(single_df)
             para_combination.append(manager_list)
 
             all_para_combination[i] = para_combination
@@ -230,17 +144,6 @@ class BacktestSystem():
         para_dict_key_list = list(result_dict)
 
         return para_dict_key_list
-    """
-    def _get_return_list(self, all_para_combination):
-        processes  = self.processes
-        contractor = self.contractor
-
-        pool        = mp.Pool(processes = processes)
-        return_list = pool.map(contractor, all_para_combination)
-        pool.close()
-
-        return return_list
-        """
 
     def _store_backtest_result_df(self, return_list, result_dict, para_dict_key_list, manager_list):
         finished_path = self.finished_path
@@ -262,15 +165,13 @@ class BacktestSystem():
 
         return result_df
 
-    def contractor(self, para_combination):
+    def _contractor(self, para_combination):
         if len(para_combination) > 1:
             manager_list = para_combination[-1]
             manager_list.append(self.backtest(para_combination[0:-1]))
 
     def backtest(self, para_combination):
-        df = self.df
-
-        base_csv_existed, base_csv = self.check_base_csv(para_combination)
+        base_csv_existed, base_csv = self._check_base_csv(para_combination)
 
         if base_csv_existed == False:
             backtest_ready_list = self.get_backtest_ready_list_without_base_csv(para_combination)
@@ -280,10 +181,6 @@ class BacktestSystem():
 
         """
         df_list = []
-
-        split_index = int(0.8 * len(df))
-        training_df = df.iloc[:split_index]
-        testing_df  = df.iloc[split_index:]
 
         df_list.append(df)
         df_list.append(training_df)
@@ -299,19 +196,15 @@ class BacktestSystem():
 
         return return_list
 
-    def check_base_csv(self, para_combination):
-        finished_path = self.finished_path
-
-        symbol = self.symbol
-
+    def _check_base_csv(self, para_combination):
         rolling_window = para_combination[0]
         upper_band     = para_combination[1]
         lower_band     = para_combination[2]
 
         base_csv_existed = False
 
-        base_path = f"{finished_path}/{symbol}/single_result"
-        base_csv  = f"{base_path}/{symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
+        base_path = f"{self.finished_path}/{self.symbol}/single_result"
+        base_csv  = f"{base_path}/{self.symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
 
         if os.path.isfile(base_csv) == True:
             base_csv_existed = True
@@ -319,13 +212,9 @@ class BacktestSystem():
         return base_csv_existed, base_csv
 
     def get_backtest_ready_list_without_base_csv(self, para_combination):
-        df = self.df
-
-        rolling_window = para_combination[0]
-
-        df["ma"]      = df["fr_oi"].rolling(rolling_window).mean()
-        df["sd"]      = df["fr_oi"].rolling(rolling_window).std()
-        df["z_score"] = (df["fr_oi"] - df["ma"]) / df["sd"]
+        single_df["ma"]      = self.single_df["fr_oi"].rolling(self.rolling_window).mean()
+        single_df["sd"]      = self.single_df["fr_oi"].rolling(self.rolling_window).std()
+        single_df["z_score"] = (self.single_df["fr_oi"] - self.single_df["ma"]) / self.single_df["sd"]
         # df.dropna(inplace = True)
 
         long_pos_opened  = False
@@ -394,7 +283,7 @@ class BacktestSystem():
 
     def get_single_result_list(self, backtest_ready_list, base_csv_existed, para_combination):
         # df = backtest_df
-        df = self.df
+        single_df = self.single_backtest_df
 
         asset    = self.asset
         strategy = self.strategy
@@ -429,12 +318,12 @@ class BacktestSystem():
 
         single_result_list = []
 
-        loop_len = len(df) - len(signal_list)
+        loop_len = len(single_df) - len(signal_list)
 
         for i in range(loop_len):
-            now_price   = df.loc[i, "open"]
-            now_fr      = df.loc[i, "funding_rate"]
-            now_z_score = df.loc[i, "z_score"]
+            now_price   = single_df.loc[i, "open"]
+            now_fr      = single_df.loc[i, "funding_rate"]
+            now_z_score = single_df.loc[i, "z_score"]
 
             # S1: 0 position -> no signal triggered
             if ((long_pos_opened == False) and (short_pos_opened == False)) and ((now_z_score <= upper_band) and (now_z_score >= -1 * lower_band)):
@@ -719,7 +608,7 @@ class BacktestSystem():
 
         print(strategy, symbol, interval, category, exchange, asset, "action = finished backtest", "(", rolling_window, upper_band, lower_band, ")", )
 
-        single_result_list.append(df)
+        single_result_list.append(single_df)
         single_result_list.append(signal_list)
         single_result_list.append(long_trading_pnl_list)
         single_result_list.append(short_trading_pnl_list)
@@ -731,7 +620,7 @@ class BacktestSystem():
         return single_result_list
 
     def _get_single_result_df(self, single_result_list):
-        df                     = single_result_list[0]
+        single_df              = single_result_list[0]
         signal_list            = single_result_list[1]
         long_trading_pnl_list  = single_result_list[2]
         short_trading_pnl_list = single_result_list[3]
@@ -748,20 +637,20 @@ class BacktestSystem():
         long_tx_fee_df       = pd.DataFrame(long_tx_fee_list)
         short_tx_fee_df      = pd.DataFrame(short_tx_fee_list)
 
-        df_col_list          = df.columns.tolist()
+        single_df_col_list   = single_df.columns.tolist()
         append_col_list      = ["signal",
                     "long_trading_pnl", "short_trading_pnl",
                     "long_fr_pnl", "short_fr_pnl",
                     "long_tx_fee", "short_tx_fee"]
 
-        df_col_list.extend(append_col_list)
+        single_df_col_list.extend(append_col_list)
 
-        single_result_df = pd.concat((df, signal_df,
+        single_result_df = pd.concat((single_df, signal_df,
                            long_trading_pnl_df, short_trading_pnl_df,
                            long_fr_pnl_df, short_fr_pnl_df,
                            long_tx_fee_df, short_tx_fee_df), axis = 1)
 
-        single_result_df.columns = df_col_list
+        single_result_df.columns = single_df_col_list
 
         return single_result_df
 
@@ -781,8 +670,6 @@ class BacktestSystem():
 
     def _calculate_performance_matrix(self, single_result_list, para_combination):
         binance_tx_fee_rate = self.binance_tx_fee_rate
-
-        df = single_result_list[0]
 
         signal_list = single_result_list[1]
 
@@ -950,6 +837,72 @@ class BacktestSystem():
         sharpe_table_path = f"{finished_path}/{symbol}/full_result/{symbol}_{para_a}_{para_b}.png"
 
         return sharpe_table_path
+
+    def _draw_graphs_and_tables(self, result_df, para_dict_key_list):
+        para_a = para_dict_key_list[0]
+        para_b = para_dict_key_list[1]
+        para_c = para_dict_key_list[2]
+
+        table_dict = {}
+        table_list = []
+
+        table_ab = result_df[(result_df[para_c] == 1.75)]
+        table_ab = table_ab.pivot(index = para_a, columns = para_b, values = "strat_sharpe")
+        table_dict["table"]  = table_ab
+        table_dict["para_a"] = para_a
+        table_dict["para_b"] = para_b
+        table_list.append(table_dict)
+
+        table_dict = {}
+        table_ac = result_df[(result_df[para_b] == 4)]
+        table_ac = table_ac.pivot(index = para_a, columns = para_c, values = "strat_sharpe")
+        table_dict["table"]  = table_ac
+        table_dict["para_a"] = para_a
+        table_dict["para_b"] = para_c
+        table_list.append(table_dict)
+
+        table_dict = {}
+        table_bc = result_df[(result_df[para_a] == 10)]
+        table_bc = table_bc.pivot(index = para_b, columns = para_c, values = "strat_sharpe")
+        table_dict["table"]  = table_bc
+        table_dict["para_a"] = para_b
+        table_dict["para_b"] = para_c
+        table_list.append(table_dict)
+
+        for table_dict in table_list:
+            self._draw_sharpe_distribution_table(table_dict)
+
+    def _draw_sharpe_distribution_table(self, table_dict):
+        table  = table_dict["table"]
+        para_x = table_dict["para_a"]
+        para_y = table_dict["para_b"]
+
+        plt.figure(figsize = (20, 8))
+        plt.imshow(table, cmap = "PuBu", aspect = "auto")
+        plt.colorbar()
+        plt.title("Sharpe Ratio Distribution")
+        plt.xlabel(para_y)
+        plt.ylabel(para_x)
+        plt.xticks(range(len(table.columns)), table.columns, rotation = "vertical")
+        plt.yticks(range(len(table.index)), table.index)
+
+        for i in range(len(table.index)):
+            for j in range(len(table.columns)):
+                plt.text(j, i, f"{table.iloc[i, j]:.2f}", ha = "center", va = "center", color = "black")
+
+        sharpe_table_path = self._get_sharpe_table_path(para_x, para_y)
+        plt.savefig(sharpe_table_path)
+        # plt.show()
+
+        """
+        # PuBu -> Blue, Yellow, for investors
+        # BuGn -> Green, for investors
+    
+        # RdYlGn -> Green, Yellow, Red -> for myself
+        # YlGn   -> Green, Yellow      -> for myself
+    
+        self.create_sharpe_ratio_surface(result_df, para1, para2, para3, "SR")
+        """
 
     """
     def create_sharpe_ratio_surface(self, result_df, x_para, y_para, z_para, title):
