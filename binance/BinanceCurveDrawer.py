@@ -1,20 +1,11 @@
-"""
-Rmb to change the
-1) initialization
-2) result_path
-"""
 import matplotlib.pyplot as plt
 import pandas as pd
 
-pd.set_option("display.max_columns", None)
-pd.set_option("display.max_rows", None)
-pd.set_option("display.width", 320)
-
-class CurveDrawer:
+class BinanceCurveDrawer:
     def __init__(self):
         self.asset      = "Cryptocurrency"
-        self.strategy   = "testing_basis_index_price_open_interest"
         self.exchange   = "binance"
+        self.strategy   = "testing_basis_index_price_open_interest"
         self.instrument = "futures"
         self.product    = "coinm_futures"
         self.interval   = "8h"
@@ -26,28 +17,16 @@ class CurveDrawer:
 
     def draw_curves(self):
         result_df = self._get_result_df()
-        self._draw_equity_curve()
+        self._draw_equity_curve(result_df)
 
     def get_result_path(self):
-        asset      = self.asset
-        strategy   = self.strategy
-        exchange   = self.exchange
-        instrument = self.instrument
-        product    = self.product
-        interval   = self.interval
-
-        result_path = f"D:/backtest/{asset}/{strategy}/{exchange}/{instrument}/{product}/{interval}"
+        result_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.instrument}/{self.product}/{self.interval}"
 
         return result_path
 
     def _get_result_df(self):
-        symbol         = self.symbol
-        rolling_window = self.rolling_window
-        upper_band     = self.upper_band
-        lower_band     = self.lower_band
-
         result_path = self.get_result_path()
-        result_csv  = f"{result_path}/{symbol}/single_result/{symbol}_{rolling_window}_{upper_band}_{lower_band}.csv"
+        result_csv  = f"{result_path}/{self.symbol}/single_result/{self.symbol}_{self.rolling_window}_{self.upper_band}_{self.lower_band}.csv"
 
         result_df = pd.read_csv(result_csv)
         result_df["total_pnl"] = result_df["long_trading_pnl"] + result_df["short_trading_pnl"] + \
@@ -58,9 +37,7 @@ class CurveDrawer:
 
         return result_df
 
-    def _draw_equity_curve(self):
-        result_df = self._get_result_df()
-
+    def _draw_equity_curve(self, result_df):
         equity_curve_data = result_df["cum_pnl"]
 
         plt.figure(figsize = (12, 6))
@@ -84,13 +61,13 @@ class CurveDrawer:
 
         result_path = self.get_result_path()
 
-        equity_curve_path  = f"{result_path}/{symbol}/full_result/{symbol}_{rolling_window}_{upper_band}_{lower_band}.png"
+        equity_curve_path  = f"{result_path}/{self.symbol}/full_result/{self.symbol}_{self.rolling_window}_{self.upper_band}_{self.lower_band}.png"
 
         return equity_curve_path
 
 def main():
-    curveDrawer = CurveDrawer()
-    curveDrawer.draw_curves()
+    binanceCurveDrawer = BinanceCurveDrawer()
+    binanceCurveDrawer.draw_curves()
 
 if __name__ == "__main__":
     main()
