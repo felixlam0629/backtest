@@ -1,7 +1,3 @@
-"""
-sharpe ratio distribution table
-"""
-
 import datetime
 import itertools
 import math
