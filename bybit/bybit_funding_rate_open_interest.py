@@ -1,11 +1,5 @@
 """
 rmb to change both the initialization
-single_result -> inside multiprocessing
-full_result   -> outside multiprocessing
-
-Issue
-1) Divide the backtest_df into 3 df -> 1) single_training_df, 2) single_testing_df, 3) single_backtest_df
-2) rolling window no need for 2) single_testing_df
 """
 
 import calendar
@@ -27,10 +21,8 @@ pd.set_option('display.width', 320)
 
 class BacktestSystem():
     def __init__(self, single_backtest_df, finished_path, symbol):
-        split_index             = int(0.8 * len(single_backtest_df))
+        self.split_index        = int(0.8 * len(single_backtest_df))
         self.single_backtest_df = single_backtest_df
-        self.single_training_df = single_backtest_df.iloc[:split_index]
-        self.single_testing_df  = single_backtest_df.iloc[split_index:]
 
         self.finished_path = finished_path
 
@@ -59,8 +51,8 @@ class BacktestSystem():
             result_key_list      = self._get_result_key_list(result_dict)
             all_para_combination = self._get_all_para_combination(single_df_dict, para_value_list, manager_list)
 
-            pool           = mp.Pool(processes = self.processes)
-            return_list    = pool.map(self._contractor, all_para_combination)
+            pool        = mp.Pool(processes = self.processes)
+            return_list = pool.map(self._contractor, all_para_combination)
             print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = finished full backtest")
 
             full_result_df = self._store_full_result_df(return_list, result_dict, result_key_list, single_df_dict, manager_list)
@@ -70,6 +62,8 @@ class BacktestSystem():
             print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨{single_df_name}丨action = created sharpe ratio distribution table")
 
         pool.close()
+        print(f"{self.strategy}丨{self.symbol}丨{self.interval}丨{self.category}丨{self.exchange}丨action = finished backtest")
+        print("**************************************************")
 
     def _get_para_dict(self):
 
@@ -102,15 +96,15 @@ class BacktestSystem():
         single_df_list = []
 
         single_df_dict = {}
-        single_df_dict["backtest_set"] = self.single_backtest_df
+        single_df_dict["backtest_set"] = None
         single_df_list.append(single_df_dict)
 
         single_df_dict = {}
-        single_df_dict["training_set"] = self.single_training_df
+        single_df_dict["training_set"] = None
         single_df_list.append(single_df_dict)
 
         single_df_dict = {}
-        single_df_dict["testing_set"]  = self.single_testing_df.reset_index(drop = True)
+        single_df_dict["testing_set"]  = None
         single_df_list.append(single_df_dict)
 
         return single_df_list
@@ -121,6 +115,22 @@ class BacktestSystem():
         for i in range(len(all_para_combination)):
             para_combination = all_para_combination[i]
             para_combination = list(para_combination)
+
+            rolling_window = para_combination[0]
+            single_df_name = list(single_df_dict)[0]
+
+            if single_df_name == "backtest_set":
+                single_backtest_df = self.single_backtest_df
+                single_df_dict["backtest_set"] = single_backtest_df
+
+            elif single_df_name == "training_set":
+                single_training_df = self.single_backtest_df.iloc[:self.split_index]
+                single_df_dict["training_set"] = single_training_df
+
+            elif single_df_name == "testing_set":
+                single_testing_df = self.single_backtest_df.iloc[(self.split_index - rolling_window):]
+                single_testing_df = single_testing_df.reset_index(drop = True)
+                single_df_dict["testing_set"] = single_testing_df
 
             para_combination.append(single_df_dict)
             para_combination.append(manager_list)
@@ -1163,7 +1173,7 @@ def main():
     symbol_list   = dataProcessor._get_symbol_list()
     finished_list = dataProcessor._get_finished_list()
 
-    symbol_list   = ["BTCUSDT"]
+    symbol_list   = ["BTCPERP", "BTCUSDT"]
     # finished_list = []
 
     for symbol in symbol_list:
