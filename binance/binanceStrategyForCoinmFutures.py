@@ -15,7 +15,7 @@ class BacktestSystem():
 
         self.finished_path = finished_path
 
-        self.asset      = "Cryptocurrency"
+        self.asset      = "cryptocurrency"
         self.strategy   = "testing_basis_index_price_open_interest"
         self.exchange   = "binance"
         self.instrument = "futures"
@@ -1024,7 +1024,7 @@ class DataProcessor:
         function   = self.price_func
         interval   = self.interval
 
-        price_path = f"D:/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
+        price_path = f"D:/data/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
 
         return price_path
 
@@ -1072,7 +1072,7 @@ class DataProcessor:
         function   = self.fr_func
         interval   = self.interval
 
-        funding_rate_path = f"D:/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
+        funding_rate_path = f"D:/data/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
 
         return funding_rate_path
 
@@ -1120,7 +1120,7 @@ class DataProcessor:
         interval   = "4h"
         type       = self.type
 
-        basis_path = f"D:/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}/{type}"
+        basis_path = f"D:/data/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}/{type}"
 
         return basis_path
 
@@ -1170,7 +1170,7 @@ class DataProcessor:
         exchange   = "Binance"
         symbol     = self.symbol
 
-        open_interest_path = f"D:/{asset}/{source}/{instrument}/{function}/{type}/{interval}/{exchange}"
+        open_interest_path = f"D:/data/{asset}/{source}/{instrument}/{function}/{type}/{interval}/{exchange}"
 
         return open_interest_path
 

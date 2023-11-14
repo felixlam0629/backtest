@@ -8,11 +8,13 @@ import time
 
 class BybitResultScreener:
     def __init__(self, strategy, category, interval):
-        self.asset      = "Cryptocurrency"
+        self.asset      = "cryptocurrency"
         self.exchange   = "bybit"
         self.strategy   = strategy
         self.category   = category
         self.interval   = interval
+
+        self.set = "backtest_set"
 
         self.price_func     = "kline"
         self.price_interval = "240"
@@ -27,6 +29,8 @@ class BybitResultScreener:
         result_list = self._generate_result_list(original_symbol_list, finished_symbol_list, finished_symbol_list_path)
         result_df   = self._generate_result_df(result_list)
         self._store_result_df(result_df)
+
+        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")
 
     def _get_file_list(self, path):
         file_list = []
@@ -45,7 +49,7 @@ class BybitResultScreener:
         return file_list
     
     def _get_original_symbol_list_path(self):
-        original_symbol_list_path = f"D:/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.price_interval}"
+        original_symbol_list_path = f"D:/data/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.price_interval}"
 
         return original_symbol_list_path
     
@@ -97,7 +101,7 @@ class BybitResultScreener:
             if symbol in finished_symbol_list:
                 symbol_pass = False
 
-                symbol_csv = f"{finished_symbol_list_path}/{symbol}/backtest_set/full_result/{symbol}.csv"
+                symbol_csv = f"{finished_symbol_list_path}/{symbol}/{self.set}/full_result/{symbol}.csv"
                 symbol_df  = pd.read_csv(symbol_csv)
 
                 for i in range(len(symbol_df)):
@@ -235,6 +239,7 @@ class BybitResultScreener:
 
         column_name_list  = ["symbol", "num_of_trade", "win_rate", "ann_return", "mdd", \
                              "calmar","highest_sharpe", "rubbish_strat"]
+
         result_df.columns = column_name_list
 
         result_df = result_df.sort_values(by = "highest_sharpe", ascending = False)
@@ -242,7 +247,5 @@ class BybitResultScreener:
         return result_df
 
     def _store_result_df(self, result_df):
-        result_csv = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}/backtest_set/full_result/full_symbol_backtest_result.csv"
+        result_csv = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}/full_symbol_backtest_result.csv"
         result_df.to_csv(result_csv, index = False)
-
-        print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")

@@ -8,10 +8,6 @@ import pandas as pd
 import requests
 import time
 
-pd.set_option("display.max_columns", None)
-pd.set_option("display.max_rows", None)
-pd.set_option("display.width", 320)
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -22,8 +18,8 @@ class BacktestSystem():
 
         self.finished_path = finished_path
 
-        self.asset      = "Cryptocurrency"
-        self.strategy   = "Becky"
+        self.asset      = "cryptocurrency"
+        self.strategy   = "becky"
         self.exchange   = "binance"
         self.instrument = "futures"
         self.product    = "usdm_futures"
@@ -979,7 +975,7 @@ class DataProcessor:
         function   = self.price_func
         interval   = self.interval
 
-        price_path = f"D:/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
+        price_path = f"D:/data/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
 
         return price_path
 

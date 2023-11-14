@@ -12,7 +12,7 @@ import time
 
 class BacktestResultScreener:
     def __init__(self):
-        self.asset      = "Cryptocurrency"
+        self.asset      = "cryptocurrency"
         self.exchange   = "binance"
         self.strategy   = "testing_basis_index_price_open_interest"
         self.instrument = "futures"

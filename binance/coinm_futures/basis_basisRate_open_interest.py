@@ -1,8 +1,3 @@
-"""
-rmb to change both the initialization
-sharpe ratio distribution table
-"""
-
 import datetime
 import itertools
 import math
@@ -20,7 +15,7 @@ class BacktestSystem():
 
         self.finished_path = finished_path
 
-        self.asset      = "Cryptocurrency"
+        self.asset      = "cryptocurrency"
         self.strategy   = "testing_basisRate_open_interest"
         self.exchange   = "binance"
         self.instrument = "futures"
@@ -1029,7 +1024,7 @@ class DataProcessor:
         function   = self.price_func
         interval   = self.interval
 
-        price_path = f"D:/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
+        price_path = f"D:/data/{asset}/{exchange}/{instrument}/{product}/{function}/{interval}"
 
         return price_path
 

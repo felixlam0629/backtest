@@ -1,9 +1,9 @@
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class BinanceCurveDrawer:
     def __init__(self):
-        self.asset      = "Cryptocurrency"
+        self.asset      = "cryptocurrency"
         self.exchange   = "binance"
         self.strategy   = "testing_basis_index_price_open_interest"
         self.instrument = "futures"
@@ -12,8 +12,8 @@ class BinanceCurveDrawer:
         self.symbol     = "BTCUSD_PERP"
 
         self.rolling_window = 10
-        self.upper_band     = 0
-        self.lower_band     = 1.75
+        self.upper_band     = 1
+        self.lower_band     = 1
 
     def draw_curves(self):
         result_df = self._get_result_df()

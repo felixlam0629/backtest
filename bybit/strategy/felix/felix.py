@@ -42,24 +42,31 @@ class Felix:
         bybitResultScreener._generate_full_symbol_backtest_report()
 
     def manage_full_backtest_result(self):
-        bybitResultManager = BybitResultManager(self.strategy, self.category, self.interval)
+        delete_file = False
+
+        bybitResultManager = BybitResultManager(self.strategy, self.category, self.interval, delete_file)
         bybitResultManager._delete_useless_backtest_result()
 
     def draw_full_backtest_result_curves(self):
+        single_df_name = "backtest_set"
         symbol         = "BTCUSDT"
         rolling_window = 10
         upper_band     = 1
         lower_band     = 1
 
-        bybitCurveDrawer = BybitCurveDrawer(self.strategy, self.category, self.interval, symbol, rolling_window, upper_band, lower_band)
+        bybitCurveDrawer = BybitCurveDrawer(self.strategy, self.category, self.interval, symbol, single_df_name, rolling_window, upper_band, lower_band)
         bybitCurveDrawer._draw_curves()
 
 def main():
     felix = Felix()
-    felix._start_backtest_engine()
-    # felix.screen_full_backtest_result()
-    # felix.manage_full_backtest_result()
-    # felix.draw_full_backtest_result_curves()
+    # felix._start_backtest_engine()
+    print("----------------------------------------------------------------------------------------------------")
+    felix.screen_full_backtest_result()
+    print("----------------------------------------------------------------------------------------------------")
+    felix.manage_full_backtest_result()
+    print("----------------------------------------------------------------------------------------------------")
+    felix.draw_full_backtest_result_curves()
+    print("----------------------------------------------------------------------------------------------------")
 
 if __name__ == "__main__":
     main()

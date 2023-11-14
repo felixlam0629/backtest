@@ -8,7 +8,7 @@ import requests
 
 class FelixDataProcessor:
     def __init__(self, strategy = None, category = None, interval = None, symbol = None, backtest_df_ready = False):
-        self.asset    = "Cryptocurrency"
+        self.asset    = "cryptocurrency"
         self.exchange = "bybit"
         self.strategy = strategy
         self.category = category
@@ -99,7 +99,7 @@ class FelixDataProcessor:
         return price_df
 
     def _get_price_path(self):
-        price_path = f"D:/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.fr_interval}"
+        price_path = f"D:/data/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.fr_interval}"
 
         return price_path
 
@@ -140,7 +140,7 @@ class FelixDataProcessor:
     def _get_funding_rate_path(self):
         interval = "480"
 
-        funding_rate_path = f"D:/{self.asset}/{self.exchange}/{self.fr_func}/{self.category}/{interval}"
+        funding_rate_path = f"D:/data/{self.asset}/{self.exchange}/{self.fr_func}/{self.category}/{interval}"
 
         return funding_rate_path
 
@@ -182,7 +182,7 @@ class FelixDataProcessor:
     def get_open_interest_path(self):
         interval = "4h"
 
-        open_interest_path = f"D:/{self.asset}/{self.exchange}/{self.oi_func}/{self.category}/{interval}"
+        open_interest_path = f"D:/data/{self.asset}/{self.exchange}/{self.oi_func}/{self.category}/{interval}"
 
         return open_interest_path
 
