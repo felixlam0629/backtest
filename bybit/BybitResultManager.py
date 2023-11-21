@@ -1,4 +1,3 @@
-
 import datetime
 import numpy as np
 import os
@@ -62,4 +61,10 @@ class BybitResultManager:
 
         for symbol in delete_list:
             symbol_path = os.path.join(result_path, symbol)
-            shutil.rmtree(symbol_path)
+
+            try:
+                shutil.rmtree(symbol_path)
+                print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨action = deleted backtest file")
+
+            except FileNotFoundError:
+                pass
