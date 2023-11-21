@@ -1,3 +1,10 @@
+"""
+1) >2.5 -> acceptable result for 2nd round screening
+2) 0    -> unacceptable result for file deletion
+3) -1   -> bug in backtesting that need to re-run the symbol into the backtesting engine
+4) -2   -> bug in BacktestSystem that need to be solved
+"""
+
 import datetime
 import numpy as np
 import os
@@ -60,7 +67,9 @@ class BybitResultScreener:
         backtested_symbol_list = []
 
         for original_symbol in original_symbol_list:
-            if (original_symbol[-6:].isdigit() == False) and (original_symbol != "None"): # For current moment not trading delivery contracts
+            last_c = original_symbol[-1]
+
+            if ("-" not in original_symbol) and (last_c.isdigit() == False):
                 backtested_symbol_list.append(original_symbol)
 
         return backtested_symbol_list
@@ -102,7 +111,35 @@ class BybitResultScreener:
                 symbol_pass = False
 
                 symbol_csv = f"{finished_symbol_list_path}/{symbol}/{self.set}/full_result/{symbol}.csv"
-                symbol_df  = pd.read_csv(symbol_csv)
+
+                try:
+                    symbol_df = pd.read_csv(symbol_csv)
+
+                except FileNotFoundError:
+                    num_of_trade   = -1
+                    win_rate       = -1
+                    ann_return     = -1
+                    mdd            = -1
+                    calmar         = -1
+                    highest_sharpe = -1
+                    # lowest_sharpe  = -1
+                    # contrary_test  = True
+                    rubbish_strat = False
+
+                    num_of_trade_list.append(num_of_trade)
+                    win_rate_list.append(win_rate)
+                    ann_return_list.append(ann_return)
+                    mdd_list.append(mdd)
+                    calmar_list.append(calmar)
+                    highest_sharpe_list.append(highest_sharpe)
+                    # lowest_sharpe_list.append(lowest_sharpe)
+                    # contrary_test_list.append(contrary_test)
+                    rubbish_strat_list.append(rubbish_strat)
+
+                    print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = without single backtest report")
+                    print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨reason = symbol did not run into backtest system")
+                    # print("**************************************************")
+                    pass
 
                 for i in range(len(symbol_df)):
                     highest_sharpe = symbol_df["strat_sharpe"].iloc[i]
@@ -151,13 +188,13 @@ class BybitResultScreener:
                         pass
 
                 if symbol_pass == False:
-                    num_of_trade   = -1
-                    win_rate       = -1
-                    ann_return     = -1
-                    mdd            = -1
-                    calmar         = -1
-                    highest_sharpe = -1
-                    # lowest_sharpe  = -1
+                    num_of_trade   = 0
+                    win_rate       = 0
+                    ann_return     = 0
+                    mdd            = 0
+                    calmar         = 0
+                    highest_sharpe = 0
+                    # lowest_sharpe  = 0
                     # contrary_test  = True
                     rubbish_strat  = True
 
@@ -172,16 +209,16 @@ class BybitResultScreener:
                     rubbish_strat_list.append(rubbish_strat)
 
                 print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨action = generated single backtest report")
-                print("**************************************************")
+                # print("**************************************************")
 
             else:
-                num_of_trade   = 0
-                win_rate       = 0
-                ann_return     = 0
-                mdd            = 0
-                calmar         = 0
-                highest_sharpe = 0
-                # lowest_sharpe  = 0
+                num_of_trade   = -2
+                win_rate       = -2
+                ann_return     = -2
+                mdd            = -2
+                calmar         = -2
+                highest_sharpe = -2
+                # lowest_sharpe  = -2
                 # contrary_test  = True
                 rubbish_strat  = False
 
@@ -196,7 +233,8 @@ class BybitResultScreener:
                 rubbish_strat_list.append(rubbish_strat)
 
                 print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = without single backtest report")
-                print("**************************************************")
+                print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨reason = unknown")
+                # print("**************************************************")
 
         result_list.append(original_symbol_list)
         result_list.append(num_of_trade_list)
@@ -249,3 +287,12 @@ class BybitResultScreener:
     def _store_result_df(self, result_df):
         result_csv = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}/full_symbol_backtest_result.csv"
         result_df.to_csv(result_csv, index = False)
+
+"""
+def main():
+    bybitResultScreener = BybitResultScreener("felix", "linear", "480")
+    bybitResultScreener._get_original_symbol_list()
+    
+if __name__ == "__main__":
+    main()
+    """
