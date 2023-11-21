@@ -65,7 +65,15 @@ class FelixDataProcessor:
         symbol_list_path = self._get_price_path()
         symbol_list      = self._get_file_list(symbol_list_path)
 
-        return symbol_list
+        formatted_symbol_list = []
+
+        for symbol in symbol_list:
+            last_c = symbol[-1]
+
+            if ("-" not in symbol) and (last_c.isdigit() == False):
+                formatted_symbol_list.append(symbol)
+
+        return formatted_symbol_list
 
     def _get_finished_list(self):
         finished_path = self.get_finished_path()
