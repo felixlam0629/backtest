@@ -2,7 +2,6 @@ import calendar
 import datetime
 import itertools
 import math
-import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
 import os
@@ -22,7 +21,7 @@ class BybitBacktestSystem():
         self.binance_tx_fee_rate = 0.0002
         self.ann_multiple        = 365 * 3
 
-        self.processes = 8
+        self.processes = 4 # 2 ok
 
         self.finished_path = finished_path
 
@@ -49,15 +48,15 @@ class BybitBacktestSystem():
             full_result_df = self._store_full_result_df(return_list, result_dict, result_key_list, single_df_dict, manager_list)
             print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = exported backtest_report to csv")
 
-            self._draw_graphs_and_tables(full_result_df, single_df_dict, result_key_list)
-            print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = created sharpe ratio distribution table")
+            # self._draw_graphs_and_tables(full_result_df, single_df_dict, result_key_list)
+            # print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = created sharpe ratio distribution table")
 
         pool.close()
         print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨action = finished backtest")
         print("**************************************************")
 
     def _get_para_dict(self):
-
+        """
         para_dict = {
             "rolling_window" : [10, 20, 30], # rw cannot be 0
             "upper_band"     : [0, 1, 2, 3, 4],
@@ -69,7 +68,6 @@ class BybitBacktestSystem():
             "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4],
             "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4]
         }
-        """
 
         return para_dict
 
@@ -836,8 +834,12 @@ class BybitBacktestSystem():
             folder (str): path of the file
         """
 
-        if os.path.isdir(folder) == False:
-            os.mkdir(folder)
+        if os.path.isdir(folder) == False: # unknown bug from mp
+            try:
+                os.mkdir(folder)
+
+            except FileExistsError:
+                pass
 
     def _get_sharpe_table_path(self, single_df_dict, para_a, para_b):
         single_df_name = list(single_df_dict)[0]
@@ -845,6 +847,7 @@ class BybitBacktestSystem():
 
         return sharpe_table_path
 
+    """
     def _draw_graphs_and_tables(self, full_result_df, single_df_dict, result_key_list):
         para_a = result_key_list[0]
         para_b = result_key_list[1]
@@ -899,19 +902,13 @@ class BybitBacktestSystem():
 
         sharpe_table_path = self._get_sharpe_table_path(single_df_dict, para_x, para_y)
         plt.savefig(sharpe_table_path)
+        
         # plt.show()
-
-        """
-        # PuBu -> Blue, Yellow, for investors
-        # BuGn -> Green, for investors
-
+        # PuBu   -> Blue, Yellow, for investors
+        # BuGn   -> Green, for investors
         # RdYlGn -> Green, Yellow, Red -> for myself
         # YlGn   -> Green, Yellow      -> for myself
 
-        self.create_sharpe_ratio_surface(result_df, para1, para2, para3, "SR")
-        """
-
-    """
     def create_sharpe_ratio_surface(self, result_df, x_para, y_para, z_para, title):
         x_values     = result_df[x_para]
         y_values     = result_df[y_para]
