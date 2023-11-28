@@ -9,7 +9,6 @@ class BybitCurveDrawer:
         self.category   = category
         self.interval   = interval
         self.symbol     = symbol
-        self.price_func = "kline"
 
         self.single_df_name = single_df_name
         self.rolling_window = rolling_window
@@ -31,6 +30,7 @@ class BybitCurveDrawer:
 
         print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨"
               f"{self.single_df_name}丨({self.rolling_window}, {self.upper_band}, {self.lower_band})丨action = drew and saved sharpe distribution table")
+        print("**************************************************")
 
     def _get_result_path(self):
         result_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.category}/{self.interval}"
@@ -72,6 +72,7 @@ class BybitCurveDrawer:
 
         equity_curve_path = self._get_equity_curve_path()
         plt.savefig(equity_curve_path)
+        plt.close()
 
     def _get_equity_curve_path(self):
         result_path       = self._get_result_path()
@@ -133,6 +134,7 @@ class BybitCurveDrawer:
 
         sharpe_table_path = self._get_sharpe_table_path(para_x, para_y)
         plt.savefig(sharpe_table_path)
+        plt.close()
 
         """
         plt.show()

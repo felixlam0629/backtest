@@ -12,7 +12,7 @@ import requests
 class BybitBacktestSystem():
     def __init__(self, strategy, category, interval, symbol,
                  finished_path, single_backtest_df,
-                 first_round_backtest = False, full_para_backtest = False):
+                 first_round_backtest, full_para_backtest):
 
         self.asset    = "Cryptocurrency"
         self.exchange = "bybit"
@@ -24,7 +24,7 @@ class BybitBacktestSystem():
         self.binance_tx_fee_rate = 0.0002
         self.ann_multiple        = 365 * 3
 
-        self.processes = 4
+        self.processes = 8
 
         self.finished_path = finished_path
 
@@ -55,38 +55,8 @@ class BybitBacktestSystem():
             full_result_df = self._store_full_result_df(return_list, result_dict, result_key_list, single_df_dict, manager_list)
             print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = exported backtest_report to csv")
 
-        # self._draw_graphs_and_tables(full_result_df, single_df_dict, result_key_list)
-        # print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨{single_df_name}丨action = created sharpe ratio distribution table")
-
         print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{self.symbol}丨action = finished backtest")
         print("**************************************************")
-
-    def _get_para_dict(self):
-        if self.full_para_backtest == False:
-            para_dict = {
-                "rolling_window" : [10, 20, 30], # rw cannot be 0
-                "upper_band"     : [0, 1, 2, 3, 4],
-                "lower_band"     : [0, 1, 2, 3, 4]
-            }
-
-        else:
-            para_dict = {
-                "rolling_window" : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], # rw cannot be 0
-                "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4],
-                "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4]
-            }
-
-        return para_dict
-
-    def _get_manager_list(self):
-        manager_list = mp.Manager().list()
-
-        return manager_list
-
-    def _get_para_value_list(self, para_dict):
-        para_value_list = list(para_dict.values())
-
-        return para_value_list
 
     def _get_single_df_list(self):
         single_df_list = []
@@ -107,35 +77,32 @@ class BybitBacktestSystem():
 
         return single_df_list
 
-    def _get_all_para_combination(self, single_df_dict, para_value_list, manager_list):
-        all_para_combination = list(itertools.product(*para_value_list))
+    def _get_para_dict(self):
+        if self.full_para_backtest == False:
+            para_dict = {
+                "rolling_window" : [10, 20, 30], # rw cannot be 0
+                "upper_band"     : [0, 1, 2, 3, 4],
+                "lower_band"     : [0, 1, 2, 3, 4]
+            }
 
-        for i in range(len(all_para_combination)):
-            para_combination = all_para_combination[i]
-            para_combination = list(para_combination)
+        else:
+            para_dict = {
+                "rolling_window" : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], # rw cannot be 0
+                "upper_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4],
+                "lower_band"     : [0, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.5, 4]
+            }
 
-            rolling_window = para_combination[0]
-            single_df_name = list(single_df_dict)[0]
+        return para_dict
 
-            if single_df_name == "backtest_set":
-                single_backtest_df = self.single_backtest_df
-                single_df_dict["backtest_set"] = single_backtest_df
+    def _get_para_value_list(self, para_dict):
+        para_value_list = list(para_dict.values())
 
-            elif single_df_name == "training_set":
-                single_training_df = self.single_backtest_df.iloc[:self.df_split_index]
-                single_df_dict["training_set"] = single_training_df
+        return para_value_list
 
-            elif single_df_name == "testing_set":
-                single_testing_df = self.single_backtest_df.iloc[(self.df_split_index - rolling_window):]
-                single_testing_df = single_testing_df.reset_index(drop = True)
-                single_df_dict["testing_set"] = single_testing_df
+    def _get_manager_list(self):
+        manager_list = mp.Manager().list()
 
-            para_combination.append(single_df_dict)
-            para_combination.append(manager_list)
-
-            all_para_combination[i] = para_combination
-
-        return all_para_combination
+        return manager_list
 
     def _get_result_dict(self, para_dict):
         result_dict = {}
@@ -172,6 +139,36 @@ class BybitBacktestSystem():
         result_key_list = list(result_dict)
 
         return result_key_list
+
+    def _get_all_para_combination(self, single_df_dict, para_value_list, manager_list):
+        all_para_combination = list(itertools.product(*para_value_list))
+
+        for i in range(len(all_para_combination)):
+            para_combination = all_para_combination[i]
+            para_combination = list(para_combination)
+
+            rolling_window = para_combination[0]
+            single_df_name = list(single_df_dict)[0]
+
+            if single_df_name == "backtest_set":
+                single_backtest_df = self.single_backtest_df
+                single_df_dict["backtest_set"] = single_backtest_df
+
+            elif single_df_name == "training_set":
+                single_training_df = self.single_backtest_df.iloc[:self.df_split_index]
+                single_df_dict["training_set"] = single_training_df
+
+            elif single_df_name == "testing_set":
+                single_testing_df = self.single_backtest_df.iloc[(self.df_split_index - rolling_window):]
+                single_testing_df = single_testing_df.reset_index(drop = True)
+                single_df_dict["testing_set"] = single_testing_df
+
+            para_combination.append(single_df_dict)
+            para_combination.append(manager_list)
+
+            all_para_combination[i] = para_combination
+
+        return all_para_combination
 
     def _store_full_result_df(self, return_list, result_dict, result_key_list, single_df_dict, manager_list):
         single_df_name = list(single_df_dict)[0]
