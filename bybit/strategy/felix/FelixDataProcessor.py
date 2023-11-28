@@ -7,7 +7,7 @@ from pprint import pprint
 import requests
 
 class FelixDataProcessor:
-    def __init__(self, strategy = None, category = None, interval = None, symbol = None, backtest_df_ready = False):
+    def __init__(self, strategy = None, category = None, interval = None, symbol = None):
         self.asset    = "cryptocurrency"
         self.exchange = "bybit"
         self.strategy = strategy
@@ -21,15 +21,14 @@ class FelixDataProcessor:
         self.fr_interval = "240"
 
         self.start_dt = datetime.datetime(2020, 1, 1, 0, 0, 0)
-        self.end_dt   = datetime.datetime(2024, 1, 1, 0, 0, 0)
+        # self.end_dt   = datetime.datetime(2024, 1, 1, 0, 0, 0)
+        self.end_dt   = datetime.datetime.now()
 
         self.seconds_to_ms = 1000
         self.start_int     = calendar.timegm(self.start_dt.timetuple()) * self.seconds_to_ms
         self.end_int       = calendar.timegm(self.end_dt.timetuple()) * self.seconds_to_ms
 
-        self.backtest_df_ready = backtest_df_ready
-
-    def _put_data_into_backtest_system(self):
+    def _get_backtest_df_for_backtest_system(self):
         backtest_df   = self.get_formatted_backtest_df()
         finished_path = self.get_finished_path()
 
@@ -80,6 +79,9 @@ class FelixDataProcessor:
 
         try:
             finished_list = self._get_file_list(finished_path)
+
+            if "full_symbol_backtest_result" in finished_list:
+                finished_list.remove("full_symbol_backtest_result")
 
         except FileNotFoundError:
             finished_list = []

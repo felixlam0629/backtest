@@ -150,3 +150,24 @@ class BybitCurveDrawer:
         sharpe_table_path = f"{full_result_path}/{self.symbol}_{para_a}_{para_b}.png"
 
         return sharpe_table_path
+
+    """
+    def create_sharpe_ratio_surface(self, result_df, x_para, y_para, z_para, title):
+        x_values     = result_df[x_para]
+        y_values     = result_df[y_para]
+        z_values     = result_df[z_para]
+        sharpe_ratio = result_df["strat_sharpe"]
+
+        fig = plt.figure()
+        ax  = fig.add_subplot(111, projection = "3d")
+
+        sc = ax.scatter(x_values, y_values, z_values, c = sharpe_ratio, cmap = "viridis")
+
+        ax.set_xlabel(x_para)
+        ax.set_ylabel(y_para)
+        ax.set_zlabel(z_para)
+        ax.set_title(title)
+        plt.colorbar(sc, label = "Sharpe Ratio")
+
+        plt.show()
+        """
