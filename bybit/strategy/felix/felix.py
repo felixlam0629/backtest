@@ -1,6 +1,3 @@
-"""
-for tmr/ forever backtest update system
-"""
 import pandas as pd
 
 from bybit.BybitBacktestSystem import BybitBacktestSystem
@@ -70,7 +67,7 @@ class Felix:
         bybitResultScreener = BybitResultScreener(self.strategy, self.category, self.interval)
         bybitResultScreener._generate_full_symbol_backtest_report()
 
-    def manage_full_backtest_result(self):
+    def _manage_full_backtest_result(self):
         delete_file = self.delete_file
 
         bybitResultManager = BybitResultManager(self.strategy, self.category, self.interval, delete_file)
@@ -115,18 +112,28 @@ class Felix:
 
 def main():
     felix = Felix()
-    # felix._start_test_round_backtest()
-    # print("----------------------------------------------------------------------------------------------------")
-    # felix._start_first_round_backtest()
-    # print("----------------------------------------------------------------------------------------------------")
-    # felix._screen_full_backtest_result()
-    # print("----------------------------------------------------------------------------------------------------")
-    # felix.manage_full_backtest_result()
-    # print("----------------------------------------------------------------------------------------------------")
-    # felix._start_second_round_backtest()
-    # print("----------------------------------------------------------------------------------------------------")
-    # felix._draw_full_backtest_result_curves()
-    # print("----------------------------------------------------------------------------------------------------")
+    """
+    # 1st phrase
+    felix._start_test_round_backtest()
+    print("----------------------------------------------------------------------------------------------------")
+    felix._start_first_round_backtest()
+    print("----------------------------------------------------------------------------------------------------")
+    felix._screen_full_backtest_result()
+    print("----------------------------------------------------------------------------------------------------")
+    """
+
+    """
+    # 2nd phrase
+    felix._manage_full_backtest_result()
+    print("----------------------------------------------------------------------------------------------------")
+    """
+
+    # final phrase
+    felix._start_second_round_backtest()
+    print("----------------------------------------------------------------------------------------------------")
+    felix._draw_full_backtest_result_curves()
+    print("----------------------------------------------------------------------------------------------------")
+
 
 if __name__ == "__main__":
     main()
