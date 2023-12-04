@@ -1,9 +1,10 @@
 import pandas as pd
 
-from bybit.BybitBacktestSystem import BybitBacktestSystem
-from bybit.BybitResultScreener import BybitResultScreener
-from bybit.BybitResultManager import BybitResultManager
-from bybit.BybitCurveDrawer import BybitCurveDrawer
+from bybit.strategy.BybitDataProcessor import BybitDataProcessor
+from bybit.strategy.BybitBacktestSystem import BybitBacktestSystem
+from bybit.strategy.BybitResultScreener import BybitResultScreener
+from bybit.strategy.BybitResultManager import BybitResultManager
+from bybit.strategy.BybitCurveDrawer import BybitCurveDrawer
 
 from bybit.strategy.felix.FelixDataProcessor import FelixDataProcessor
 
@@ -15,6 +16,7 @@ class Felix:
 
         self.delete_file = False # default = False
 
+        self.bybitDataProcessor = BybitDataProcessor(self.strategy, self.category, self.interval)
         self.felixDataProcessor = FelixDataProcessor(self.strategy, self.category, self.interval)
 
         # self.symbol         = "BTCUSDT" # default = "BTCUSDT"
@@ -27,7 +29,7 @@ class Felix:
         full_para_backtest   = False
 
         symbol_list   = ["BTCUSDT"]
-        finished_list = self.felixDataProcessor._get_finished_list()
+        finished_list = self.bybitDataProcessor._get_finished_list()
 
         for symbol in symbol_list:
             if symbol not in finished_list:
@@ -42,12 +44,13 @@ class Felix:
 
                 except StopIteration:
                     pass
+
     def _start_first_round_backtest(self):
         first_round_backtest = True
         full_para_backtest   = True
 
-        symbol_list   = self.felixDataProcessor._get_symbol_list()
-        finished_list = self.felixDataProcessor._get_finished_list()
+        symbol_list   = self.bybitDataProcessor._get_symbol_list()
+        finished_list = self.bybitDataProcessor._get_finished_list()
 
         for symbol in symbol_list:
             if symbol not in finished_list:
@@ -116,6 +119,7 @@ def main():
     # 1st phrase
     felix._start_test_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
+    exit()
     felix._start_first_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     felix._screen_full_backtest_result()

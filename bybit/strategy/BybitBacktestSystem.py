@@ -232,9 +232,9 @@ class BybitBacktestSystem():
         rolling_window = para_combination[0]
         single_df      = list(para_combination[3].values())[0]
 
-        single_df["ma"]      = single_df["fr_oi"].rolling(rolling_window).mean()
-        single_df["sd"]      = single_df["fr_oi"].rolling(rolling_window).std()
-        single_df["z_score"] = (single_df["fr_oi"] - single_df["ma"]) / single_df["sd"]
+        single_df["ma"]      = single_df["backtest_data"].rolling(rolling_window).mean()
+        single_df["sd"]      = single_df["backtest_data"].rolling(rolling_window).std()
+        single_df["z_score"] = (single_df["backtest_data"] - single_df["ma"]) / single_df["sd"]
 
         long_pos_opened  = False
         short_pos_opened = False
