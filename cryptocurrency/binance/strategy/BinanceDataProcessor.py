@@ -36,8 +36,7 @@ class BinanceDataProcessor:
         price_df   = self._get_price_df(price_path)
 
         base_backtest_df = self._get_price_fr_df(funding_rate_df, price_df)
-        print(base_backtest_df)
-        
+
         # open_interest_path = self._get_open_interest_path()
         # open_interest_df   = self._get_open_interest_df(open_interest_path)
         # print(open_interest_df)

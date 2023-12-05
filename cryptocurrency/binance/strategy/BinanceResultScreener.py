@@ -13,7 +13,7 @@ from pprint import pprint
 import requests
 import time
 
-class BacktestResultScreener:
+class BinanceResultScreener:
     def __init__(self, strategy, instrument, product, interval):
         self.asset      = "cryptocurrency"
         self.exchange   = "binance"

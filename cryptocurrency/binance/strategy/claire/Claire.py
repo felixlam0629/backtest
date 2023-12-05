@@ -1,12 +1,12 @@
 import pandas as pd
 
-from Binance.usdm_futures.strategy.BinanceDataProcessor import BinanceDataProcessor
-from Binance.usdm_futures.strategy.BinanceBacktestSystem import BinanceBacktestSystem
-from Binance.usdm_futures.strategy.BinanceResultScreener import BinanceResultScreener
-from Binance.usdm_futures.strategy.BinanceResultManager import BinanceResultManager
-from Binance.usdm_futures.strategy.BinanceCurveDrawer import BinanceCurveDrawer
+from cryptocurrency.binance.strategy.BinanceDataProcessor import BinanceDataProcessor
+from cryptocurrency.binance.strategy.BinanceBacktestSystem import BinanceBacktestSystem
+from cryptocurrency.binance.strategy.BinanceResultScreener import BinanceResultScreener
+from cryptocurrency.binance.strategy.BinanceResultManager import BinanceResultManager
+from cryptocurrency.binance.strategy.BinanceCurveDrawer import BinanceCurveDrawer
 
-from Binance.usdm_futures.strategy.claire.ClaireDataProcessor import ClaireDataProcessor
+from cryptocurrency.binance.strategy.claire.ClaireDataProcessor import ClaireDataProcessor
 
 class Claire:
     def __init__(self):

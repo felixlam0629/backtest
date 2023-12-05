@@ -334,7 +334,7 @@ class BinanceBacktestSystem():
 
         for i in range(loop_len):
             now_price   = single_df.loc[i, "open"]
-            now_fr      = single_df.loc[i, "funding_rate"]
+            now_fr      = single_df.loc[i, "fundingRate"]
             now_z_score = single_df.loc[i, "z_score"]
 
             # S1: 0 position -> no signal triggered
