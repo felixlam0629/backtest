@@ -6,11 +6,11 @@ from cryptocurrency.binance.strategy.BinanceResultScreener import BinanceResultS
 from cryptocurrency.binance.strategy.BinanceResultManager import BinanceResultManager
 from cryptocurrency.binance.strategy.BinanceCurveDrawer import BinanceCurveDrawer
 
-from cryptocurrency.binance.strategy.celesty.CelestyDataProcessor import CelestyDataProcessor
+from cryptocurrency.binance.strategy.june.JuneDataProcessor import JuneDataProcessor
 
-class Celesty:
+class June:
     def __init__(self):
-        self.strategy   = "celesty"
+        self.strategy   = "june"
         self.instrument = "futures"
         self.product    = "usdm_futures"
         self.interval   = "8h"
@@ -18,7 +18,7 @@ class Celesty:
         self.delete_file = False # default = False
 
         self.binanceDataProcessor = BinanceDataProcessor(self.strategy, self.instrument, self.product, self.interval)
-        self.celestyDataProcessor = CelestyDataProcessor(self.strategy, self.instrument, self.product, self.interval)
+        self.juneDataProcessor    = JuneDataProcessor(self.strategy, self.instrument, self.product, self.interval)
 
     def _start_test_round_backtest(self):
         first_round_backtest = True
@@ -29,8 +29,8 @@ class Celesty:
 
         for symbol in symbol_list:
             if symbol not in finished_list:
-                celestyDataProcessor       = CelestyDataProcessor(self.strategy, self.instrument, self.product, self.interval, symbol)
-                backtest_df, finished_path = celestyDataProcessor._get_backtest_df_for_backtest_system()
+                juneDataProcessor          = JuneDataProcessor(self.strategy, self.instrument, self.product, self.interval, symbol)
+                backtest_df, finished_path = juneDataProcessor._get_backtest_df_for_backtest_system()
 
                 binanceBacktestSystem = BinanceBacktestSystem(self.strategy, self.instrument, self.product, self.interval, symbol,
                                                               finished_path, backtest_df,
@@ -47,8 +47,8 @@ class Celesty:
         for symbol in symbol_list:
             if symbol not in finished_list:
                 try:
-                    celestyDataProcessor       = CelestyDataProcessor(self.strategy, self.instrument, self.product, self.interval, symbol)
-                    backtest_df, finished_path = celestyDataProcessor._get_backtest_df_for_backtest_system()
+                    juneDataProcessor          = JuneDataProcessor(self.strategy, self.instrument, self.product, self.interval, symbol)
+                    backtest_df, finished_path = juneDataProcessor._get_backtest_df_for_backtest_system()
 
                     binanceBacktestSystem = BinanceBacktestSystem(self.strategy, self.instrument, self.product, self.interval, symbol,
                                                                   finished_path, backtest_df,
@@ -76,8 +76,8 @@ class Celesty:
 
         for symbol in finished_list:
             try:
-                celestyDataProcessor       = CelestyDataProcessor(self.strategy, self.instrument, self.product, self.interval, symbol)
-                backtest_df, finished_path = celestyDataProcessor._get_backtest_df_for_backtest_system()
+                juneDataProcessor          = JuneDataProcessor(self.strategy, self.instrument, self.product, self.interval, symbol)
+                backtest_df, finished_path = juneDataProcessor._get_backtest_df_for_backtest_system()
 
                 binanceBacktestSystem = BinanceBacktestSystem(self.strategy, self.instrument, self.product, self.interval, symbol,
                                                               finished_path, backtest_df,
@@ -106,27 +106,28 @@ class Celesty:
                 binanceCurveDrawer._draw_curves()
 
 def main():
-    celesty = Celesty()
+    june = June()
 
     # 1st phrase
-    # celesty._start_test_round_backtest()
-    # print("----------------------------------------------------------------------------------------------------")
-    celesty._start_first_round_backtest()
+    june._start_test_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
-    celesty._screen_full_backtest_result()
+    exit()
+    june._start_first_round_backtest()
+    print("----------------------------------------------------------------------------------------------------")
+    june._screen_full_backtest_result()
     print("----------------------------------------------------------------------------------------------------")
 
     """
     # 2nd phrase
-    celesty._manage_full_backtest_result()
+    june._manage_full_backtest_result()
     print("----------------------------------------------------------------------------------------------------")
     """
 
     """
     # final phrase
-    celesty._start_second_round_backtest()
+    june._start_second_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
-    celesty._draw_full_backtest_result_curves()
+    june._draw_full_backtest_result_curves()
     print("----------------------------------------------------------------------------------------------------")
     """
 
