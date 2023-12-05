@@ -1,5 +1,8 @@
 """
-1) # should add type in the path? for coinm_fut vs usdum_fut
+1) >2.5 -> acceptable result for 2nd round screening
+2) 0    -> unacceptable result for file deletion
+3) -1   -> bug in backtesting that need to re-run the symbol into the backtesting engine
+4) -2   -> bug in BacktestSystem that need to be solved
 """
 
 import datetime
@@ -11,15 +14,13 @@ import requests
 import time
 
 class BacktestResultScreener:
-    def __init__(self):
+    def __init__(self, strategy, instrument, product, interval):
         self.asset      = "cryptocurrency"
         self.exchange   = "binance"
-        self.strategy   = "testing_basis_index_price_open_interest"
-        self.instrument = "futures"
-        self.product    = "coinm_futures"
-        self.type       = "PERPETUAL"
-        self.price_func = "kline"
-        self.interval   = "8h"
+        self.strategy   = strategy
+        self.instrument = instrument
+        self.product    = product
+        self.interval   = interval
 
     def _generate_full_symbol_backtest_report(self):
         original_symbol_list_path = self._get_original_symbol_list_path()
@@ -31,6 +32,8 @@ class BacktestResultScreener:
         result_list = self._generate_result_list(original_symbol_list, finished_symbol_list, finished_symbol_list_path)
         result_df   = self._generate_result_df(result_list)
         self._store_result_df(result_df)
+
+        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")
 
     def _get_file_list(self, path):
         file_list = []
@@ -49,7 +52,9 @@ class BacktestResultScreener:
         return file_list
     
     def _get_original_symbol_list_path(self):
-        original_symbol_list_path = f"D:/{self.asset}/{self.exchange}/{self.instrument}/{self.product}/{self.price_func}/{self.interval}"
+        price_function = "kline"
+
+        original_symbol_list_path = f"D:/data/{self.asset}/{self.exchange}/{self.instrument}/{self.product}/{price_function}/{self.interval}"
 
         return original_symbol_list_path
     
@@ -109,7 +114,7 @@ class BacktestResultScreener:
                     highest_sharpe = symbol_df["strat_sharpe"].iloc[i]
                     num_of_trade   = symbol_df["num_of_trade"].iloc[i]
 
-                    if (highest_sharpe > 2.5) and (num_of_trade > 100):
+                    if (highest_sharpe > 2.5) and (num_of_trade > 150):
                         symbol_pass = True
 
                         # lowest_sharpe  = symbol_df["strat_sharpe"].iloc[-1]
@@ -247,15 +252,14 @@ class BacktestResultScreener:
         return result_df
 
     def _store_result_df(self, result_df):
-        result_csv = f"D:/backtest/{self.asset}/{self.strategy}/{self.exchange}/{self.instrument}/{self.product}/{self.interval}/backtest_set/full_symbol_backtest_result.csv"
+        result_csv = f"D:/backtest/{self.asset}/{self.strategy}/{self.exchange}/{self.instrument}/{self.product}/{self.interval}/full_symbol_backtest_result.csv"
         result_df.to_csv(result_csv, index=False)
 
-        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨action = exported full_symbol_backtest_result to csv")
-
-
+"""
 def main():
-    backtestResultScreener = BacktestResultScreener()
-    backtestResultScreener._generate_full_symbol_backtest_report()
-    
+    binanceResultScreener = BinanceResultScreener("claire", "futures", "usdm_futures", "8h")
+    binanceResultScreener._get_original_symbol_list()
+
 if __name__ == "__main__":
     main()
+    """
