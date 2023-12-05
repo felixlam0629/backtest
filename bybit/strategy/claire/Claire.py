@@ -6,18 +6,18 @@ from bybit.strategy.BybitResultScreener import BybitResultScreener
 from bybit.strategy.BybitResultManager import BybitResultManager
 from bybit.strategy.BybitCurveDrawer import BybitCurveDrawer
 
-from bybit.strategy.felix.FelixDataProcessor import FelixDataProcessor
+from bybit.strategy.claire.ClaireDataProcessor import ClaireDataProcessor
 
-class Felix:
+class Claire:
     def __init__(self):
-        self.strategy = "felix"
+        self.strategy = "claire"
         self.category = "linear"
         self.interval = "480"
 
         self.delete_file = False # default = False
 
-        self.bybitDataProcessor = BybitDataProcessor(self.strategy, self.category, self.interval)
-        self.felixDataProcessor = FelixDataProcessor(self.strategy, self.category, self.interval)
+        self.bybitDataProcessor  = BybitDataProcessor(self.strategy, self.category, self.interval)
+        self.claireDataProcessor = ClaireDataProcessor(self.strategy, self.category, self.interval)
 
         # self.symbol         = "BTCUSDT" # default = "BTCUSDT"
         # self.rolling_window = 20        # default = 10
@@ -34,8 +34,8 @@ class Felix:
         for symbol in symbol_list:
             if symbol not in finished_list:
                 try:
-                    felixDataProcessor         = FelixDataProcessor(self.strategy, self.category, self.interval, symbol)
-                    backtest_df, finished_path = felixDataProcessor._get_backtest_df_for_backtest_system()
+                    claireDataProcessor        = ClaireDataProcessor(self.strategy, self.category, self.interval, symbol)
+                    backtest_df, finished_path = claireDataProcessor._get_backtest_df_for_backtest_system()
 
                     bybitBacktestSystem = BybitBacktestSystem(self.strategy, self.category, self.interval, symbol,
                                                               finished_path, backtest_df,
@@ -55,8 +55,8 @@ class Felix:
         for symbol in symbol_list:
             if symbol not in finished_list:
                 try:
-                    felixDataProcessor         = FelixDataProcessor(self.strategy, self.category, self.interval, symbol)
-                    backtest_df, finished_path = felixDataProcessor._get_backtest_df_for_backtest_system()
+                    claireDataProcessor        = ClaireDataProcessor(self.strategy, self.category, self.interval, symbol)
+                    backtest_df, finished_path = claireDataProcessor._get_backtest_df_for_backtest_system()
 
                     bybitBacktestSystem = BybitBacktestSystem(self.strategy, self.category, self.interval, symbol,
                                                               finished_path, backtest_df,
@@ -80,12 +80,12 @@ class Felix:
         first_round_backtest = False
         full_para_backtest   = True
 
-        finished_list = self.felixDataProcessor._get_finished_list()
+        finished_list = self.claireDataProcessor._get_finished_list()
 
         for symbol in finished_list:
             try:
-                felixDataProcessor         = FelixDataProcessor(self.strategy, self.category, self.interval, symbol)
-                backtest_df, finished_path = felixDataProcessor._get_backtest_df_for_backtest_system()
+                claireDataProcessor        = ClaireDataProcessor(self.strategy, self.category, self.interval, symbol)
+                backtest_df, finished_path = claireDataProcessor._get_backtest_df_for_backtest_system()
 
                 bybitBacktestSystem = BybitBacktestSystem(self.strategy, self.category, self.interval, symbol,
                                                           finished_path, backtest_df,
@@ -96,8 +96,8 @@ class Felix:
                 pass
 
     def _draw_full_backtest_result_curves(self):
-        finished_path       = self.felixDataProcessor.get_finished_path()
-        finished_list       = self.felixDataProcessor._get_finished_list()
+        finished_path       = self.bybitDataProcessor._get_finished_path()
+        finished_list       = self.bybitDataProcessor._get_finished_list()
         single_df_name_list = ["backtest_set", "training_set", "testing_set"]
 
         for symbol in finished_list:
@@ -114,28 +114,28 @@ class Felix:
                 bybitCurveDrawer._draw_curves()
 
 def main():
-    felix = Felix()
+    claire = Claire()
     """
     # 1st phrase
-    felix._start_test_round_backtest()
+    claire._start_test_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     exit()
-    felix._start_first_round_backtest()
+    claire._start_first_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
-    felix._screen_full_backtest_result()
+    claire._screen_full_backtest_result()
     print("----------------------------------------------------------------------------------------------------")
     """
 
     """
     # 2nd phrase
-    felix._manage_full_backtest_result()
+    claire._manage_full_backtest_result()
     print("----------------------------------------------------------------------------------------------------")
     """
 
     # final phrase
-    felix._start_second_round_backtest()
+    claire._start_second_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
-    felix._draw_full_backtest_result_curves()
+    claire._draw_full_backtest_result_curves()
     print("----------------------------------------------------------------------------------------------------")
 
 

@@ -40,10 +40,10 @@ class BybitDataProcessor:
         return base_backtest_df
 
     def _get_price_path(self):
-        price_func     = "kline"
+        price_function = "kline"
         price_interval = "240"
 
-        price_path = f"D:/data/{self.asset}/{self.exchange}/{price_func}/{self.category}/{price_interval}"
+        price_path = f"D:/data/{self.asset}/{self.exchange}/{price_function}/{self.category}/{price_interval}"
 
         return price_path
 
@@ -60,10 +60,10 @@ class BybitDataProcessor:
         return price_df
 
     def _get_funding_rate_path(self):
-        funding_rate_func     = "funding_rate"
+        funding_rate_function = "funding_rate"
         funding_rate_interval = "480"
 
-        funding_rate_path = f"D:/data/{self.asset}/{self.exchange}/{funding_rate_func}/{self.category}/{funding_rate_interval}"
+        funding_rate_path = f"D:/data/{self.asset}/{self.exchange}/{funding_rate_function}/{self.category}/{funding_rate_interval}"
 
         return funding_rate_path
 
@@ -108,10 +108,10 @@ class BybitDataProcessor:
         return price_fr_df
 
     def _get_open_interest_path(self):
-        open_interest_func     = "open_interest"
+        open_interest_function = "open_interest"
         open_interest_interval = "4h"
 
-        open_interest_path = f"D:/data/{self.asset}/{self.exchange}/{open_interest_func}/{self.category}/{open_interest_interval}"
+        open_interest_path = f"D:/data/{self.asset}/{self.exchange}/{open_interest_function}/{self.category}/{open_interest_interval}"
 
         return open_interest_path
 

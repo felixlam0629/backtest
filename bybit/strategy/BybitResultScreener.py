@@ -23,9 +23,6 @@ class BybitResultScreener:
 
         self.set = "backtest_set"
 
-        self.price_func     = "kline"
-        self.price_interval = "240"
-
     def _generate_full_symbol_backtest_report(self):
         original_symbol_list_path = self._get_original_symbol_list_path()
         finished_symbol_list_path = self._get_finished_symbol_list_path()
@@ -56,7 +53,10 @@ class BybitResultScreener:
         return file_list
     
     def _get_original_symbol_list_path(self):
-        original_symbol_list_path = f"D:/data/{self.asset}/{self.exchange}/{self.price_func}/{self.category}/{self.price_interval}"
+        price_function = "kline"
+        price_interval = "240"
+
+        original_symbol_list_path = f"D:/data/{self.asset}/{self.exchange}/{price_function}/{self.category}/{price_interval}"
 
         return original_symbol_list_path
     
@@ -145,7 +145,7 @@ class BybitResultScreener:
                     highest_sharpe = symbol_df["strat_sharpe"].iloc[i]
                     num_of_trade   = symbol_df["num_of_trade"].iloc[i]
 
-                    if (highest_sharpe > 2.5) and (num_of_trade > 100):
+                    if (highest_sharpe > 2.5) and (num_of_trade > 150):
                         symbol_pass = True
 
                         # lowest_sharpe  = symbol_df["strat_sharpe"].iloc[-1]
@@ -290,7 +290,7 @@ class BybitResultScreener:
 
 """
 def main():
-    bybitResultScreener = BybitResultScreener("felix", "linear", "480")
+    bybitResultScreener = BybitResultScreener("claire", "linear", "480")
     bybitResultScreener._get_original_symbol_list()
     
 if __name__ == "__main__":

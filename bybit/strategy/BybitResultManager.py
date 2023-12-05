@@ -17,6 +17,7 @@ class BybitResultManager:
         self.price_func = "kline"
 
         self.set = "backtest_set"
+
         self.delete_file = delete_file
 
     def _delete_useless_backtest_result(self):

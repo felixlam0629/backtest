@@ -42,12 +42,11 @@ class BybitCurveDrawer:
         single_result_path = f"{result_path}/{self.symbol}/{self.single_df_name}/single_result"
         single_result_csv  = f"{single_result_path}/{self.symbol}_{self.rolling_window}_{self.upper_band}_{self.lower_band}.csv"
 
-        single_result_df = pd.read_csv(single_result_csv)
+        single_result_df              = pd.read_csv(single_result_csv)
         single_result_df["total_pnl"] = single_result_df["long_trading_pnl"] + single_result_df["short_trading_pnl"] + \
                                         single_result_df["long_fr_pnl"] + single_result_df["short_fr_pnl"] + \
                                         single_result_df["long_tx_fee"] + single_result_df["short_tx_fee"]
-
-        single_result_df["cum_pnl"] = single_result_df["total_pnl"].cumsum()
+        single_result_df["cum_pnl"]   = single_result_df["total_pnl"].cumsum()
 
         return single_result_df
 

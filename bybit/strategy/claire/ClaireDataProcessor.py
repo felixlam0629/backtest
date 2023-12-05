@@ -7,7 +7,8 @@ from pprint import pprint
 import requests
 
 from bybit.strategy.BybitDataProcessor import BybitDataProcessor
-class FelixDataProcessor:
+
+class ClaireDataProcessor:
     def __init__(self, strategy = None, category = None, interval = None, symbol = None):
         self.asset    = "cryptocurrency"
         self.exchange = "bybit"
