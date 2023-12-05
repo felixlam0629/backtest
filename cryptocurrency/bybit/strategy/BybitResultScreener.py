@@ -138,7 +138,6 @@ class BybitResultScreener:
 
                     print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = without single backtest report")
                     print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨reason = symbol did not run into backtest system")
-                    # print("**************************************************")
                     pass
 
                 for i in range(len(symbol_df)):
@@ -149,10 +148,10 @@ class BybitResultScreener:
                         symbol_pass = True
 
                         # lowest_sharpe  = symbol_df["strat_sharpe"].iloc[-1]
-                        win_rate     = symbol_df["strat_win_rate"].iloc[i]
-                        ann_return   = symbol_df["strat_ann_return"].iloc[i]
-                        mdd          = symbol_df["strat_mdd"].iloc[i]
-                        calmar       = symbol_df["strat_calmar"].iloc[i]
+                        win_rate   = symbol_df["strat_win_rate"].iloc[i]
+                        ann_return = symbol_df["strat_ann_return"].iloc[i]
+                        mdd        = symbol_df["strat_mdd"].iloc[i]
+                        calmar     = symbol_df["strat_calmar"].iloc[i]
 
                         num_of_trade_list.append(num_of_trade)
                         win_rate_list.append(win_rate)
@@ -184,7 +183,6 @@ class BybitResultScreener:
                         break
 
                     else:
-                        # print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = failed to fulfill the requirement")
                         pass
 
                 if symbol_pass == False:
@@ -209,7 +207,6 @@ class BybitResultScreener:
                     rubbish_strat_list.append(rubbish_strat)
 
                 print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨action = generated single backtest report")
-                # print("**************************************************")
 
             else:
                 num_of_trade   = -2
@@ -234,7 +231,6 @@ class BybitResultScreener:
 
                 print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨response = without single backtest report")
                 print(f"{self.exchange}丨{self.strategy}丨{self.category}丨{self.interval}丨{symbol}丨reason = unknown")
-                # print("**************************************************")
 
         result_list.append(original_symbol_list)
         result_list.append(num_of_trade_list)

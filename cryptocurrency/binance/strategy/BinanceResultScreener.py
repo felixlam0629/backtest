@@ -22,6 +22,8 @@ class BinanceResultScreener:
         self.product    = product
         self.interval   = interval
 
+        self.set = "backtest_set"
+
     def _generate_full_symbol_backtest_report(self):
         original_symbol_list_path = self._get_original_symbol_list_path()
         finished_symbol_list_path = self.get_finished_symbol_list_path()
@@ -107,8 +109,35 @@ class BinanceResultScreener:
             if symbol in finished_symbol_list:
                 symbol_pass = False
 
-                symbol_csv = f"{finished_symbol_list_path}/{symbol}/full_result/{symbol}.csv"
-                symbol_df  = pd.read_csv(symbol_csv)
+                symbol_csv = f"{finished_symbol_list_path}/{symbol}/{self.set}/full_result/{symbol}.csv"
+
+                try:
+                    symbol_df = pd.read_csv(symbol_csv)
+
+                except FileNotFoundError:
+                    num_of_trade   = -1
+                    win_rate       = -1
+                    ann_return     = -1
+                    mdd            = -1
+                    calmar         = -1
+                    highest_sharpe = -1
+                    # lowest_sharpe  = -1
+                    # contrary_test  = True
+                    rubbish_strat = False
+
+                    num_of_trade_list.append(num_of_trade)
+                    win_rate_list.append(win_rate)
+                    ann_return_list.append(ann_return)
+                    mdd_list.append(mdd)
+                    calmar_list.append(calmar)
+                    highest_sharpe_list.append(highest_sharpe)
+                    # lowest_sharpe_list.append(lowest_sharpe)
+                    # contrary_test_list.append(contrary_test)
+                    rubbish_strat_list.append(rubbish_strat)
+
+                    print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨response = without single backtest report")
+                    print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨reason = symbol did not run into backtest system")
+                    pass
 
                 for i in range(len(symbol_df)):
                     highest_sharpe = symbol_df["strat_sharpe"].iloc[i]
@@ -118,10 +147,10 @@ class BinanceResultScreener:
                         symbol_pass = True
 
                         # lowest_sharpe  = symbol_df["strat_sharpe"].iloc[-1]
-                        win_rate     = symbol_df["strat_win_rate"].iloc[i]
-                        ann_return   = symbol_df["strat_ann_return"].iloc[i]
-                        mdd          = symbol_df["strat_mdd"].iloc[i]
-                        calmar       = symbol_df["strat_calmar"].iloc[i]
+                        win_rate   = symbol_df["strat_win_rate"].iloc[i]
+                        ann_return = symbol_df["strat_ann_return"].iloc[i]
+                        mdd        = symbol_df["strat_mdd"].iloc[i]
+                        calmar     = symbol_df["strat_calmar"].iloc[i]
 
                         num_of_trade_list.append(num_of_trade)
                         win_rate_list.append(win_rate)
@@ -149,21 +178,20 @@ class BinanceResultScreener:
                             rubbish_strat = False
                             rubbish_strat_list.append(rubbish_strat)
 
-                        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = fulfilled the requirement")
+                        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨response = fulfilled the requirement")
                         break
 
                     else:
-                        print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = failed to fulfill the requirement")
                         pass
 
                 if symbol_pass == False:
-                    num_of_trade   = -1
-                    win_rate       = -1
-                    ann_return     = -1
-                    mdd            = -1
-                    calmar         = -1
-                    highest_sharpe = -1
-                    # lowest_sharpe  = -1
+                    num_of_trade   = 0
+                    win_rate       = 0
+                    ann_return     = 0
+                    mdd            = 0
+                    calmar         = 0
+                    highest_sharpe = 0
+                    # lowest_sharpe  = 0
                     # contrary_test  = True
                     rubbish_strat  = True
 
@@ -177,17 +205,16 @@ class BinanceResultScreener:
                     # contrary_test_list.append(contrary_test)
                     rubbish_strat_list.append(rubbish_strat)
 
-                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = generated single backtest report")
-                print("**************************************************")
+                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨response = generated single backtest report")
 
             else:
-                num_of_trade   = 0
-                win_rate       = 0
-                ann_return     = 0
-                mdd            = 0
-                calmar         = 0
-                highest_sharpe = 0
-                # lowest_sharpe  = 0
+                num_of_trade   = -2
+                win_rate       = -2
+                ann_return     = -2
+                mdd            = -2
+                calmar         = -2
+                highest_sharpe = -2
+                # lowest_sharpe  = -2
                 # contrary_test  = True
                 rubbish_strat  = False
 
@@ -201,8 +228,8 @@ class BinanceResultScreener:
                 # contrary_test_list.append(contrary_test)
                 rubbish_strat_list.append(rubbish_strat)
 
-                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{self.symbol}丨response = without single backtest report")
-                print("**************************************************")
+                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨response = without single backtest report")
+                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨reason = unknown")
 
         result_list.append(original_symbol_list)
         result_list.append(num_of_trade_list)
@@ -245,6 +272,7 @@ class BinanceResultScreener:
 
         column_name_list  = ["symbol", "num_of_trade", "win_rate", "ann_return", "mdd", \
                              "calmar","highest_sharpe", "rubbish_strat"]
+
         result_df.columns = column_name_list
 
         result_df = result_df.sort_values(by = "highest_sharpe", ascending = False)
@@ -252,8 +280,8 @@ class BinanceResultScreener:
         return result_df
 
     def _store_result_df(self, result_df):
-        result_csv = f"D:/backtest/{self.asset}/{self.strategy}/{self.exchange}/{self.instrument}/{self.product}/{self.interval}/full_symbol_backtest_result.csv"
-        result_df.to_csv(result_csv, index=False)
+        result_csv = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.instrument}/{self.product}/{self.interval}/full_symbol_backtest_result.csv"
+        result_df.to_csv(result_csv, index = False)
 
 """
 def main():

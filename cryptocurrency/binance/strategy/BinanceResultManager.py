@@ -22,14 +22,14 @@ class BinanceResultManager:
 
     def _delete_useless_backtest_result(self):
         full_symbol_result_df = self._get_full_symbol_result_df()
-        delete_list = self._get_delete_list(full_symbol_result_df)
+        delete_list           = self._get_delete_list(full_symbol_result_df)
 
         if self.delete_file == True:
             self._delete_folders(delete_list)
-            print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨丨{self.product}丨{self.interval}丨action = deleted useless backtest file")
+            print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨action = deleted useless backtest file")
 
         else:
-            print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨丨{self.product}丨{self.interval}丨action = generated useless backtest file_list")
+            print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨action = generated useless backtest file_list")
 
     def _get_full_symbol_result_path(self):
             full_symbol_result_path = f"D:/backtest/{self.asset}/{self.exchange}/{self.strategy}/{self.instrument}/{self.product}/{self.interval}"
@@ -65,7 +65,7 @@ class BinanceResultManager:
 
             try:
                 shutil.rmtree(symbol_path)
-                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨丨{self.product}丨{self.interval}丨{symbol}丨action = deleted backtest file")
+                print(f"{self.exchange}丨{self.strategy}丨{self.instrument}丨{self.product}丨{self.interval}丨{symbol}丨action = deleted backtest file")
 
             except FileNotFoundError:
                 pass
