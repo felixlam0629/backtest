@@ -1,12 +1,12 @@
 import pandas as pd
 
-from bybit.strategy.BybitDataProcessor import BybitDataProcessor
-from bybit.strategy.BybitBacktestSystem import BybitBacktestSystem
-from bybit.strategy.BybitResultScreener import BybitResultScreener
-from bybit.strategy.BybitResultManager import BybitResultManager
-from bybit.strategy.BybitCurveDrawer import BybitCurveDrawer
+from cryptocurrency.bybit.strategy.BybitDataProcessor import BybitDataProcessor
+from cryptocurrency.bybit.strategy.BybitBacktestSystem import BybitBacktestSystem
+from cryptocurrency.bybit.strategy.BybitResultScreener import BybitResultScreener
+from cryptocurrency.bybit.strategy.BybitResultManager import BybitResultManager
+from cryptocurrency.bybit.strategy.BybitCurveDrawer import BybitCurveDrawer
 
-from bybit.strategy.celesty.CelestyDataProcessor import CelestyDataProcessor
+from cryptocurrency.bybit.strategy.celesty.CelestyDataProcessor import CelestyDataProcessor
 
 class Celesty:
     def __init__(self):
@@ -18,11 +18,6 @@ class Celesty:
 
         self.bybitDataProcessor   = BybitDataProcessor(self.strategy, self.category, self.interval)
         self.celestyDataProcessor = CelestyDataProcessor(self.strategy, self.category, self.interval)
-
-        # self.symbol         = "BTCUSDT" # default = "BTCUSDT"
-        # self.rolling_window = 20        # default = 10
-        # self.upper_band     = 2.5       # default = 1
-        # self.lower_band     = 1.75      # default = 1
 
     def _start_test_round_backtest(self):
         first_round_backtest = True
