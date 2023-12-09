@@ -72,7 +72,7 @@ class June:
         first_round_backtest = False
         full_para_backtest   = True
 
-        finished_list = self.BinanceDataProcessor._get_finished_list()
+        finished_list = self.binanceDataProcessor._get_finished_list()
 
         for symbol in finished_list:
             try:
@@ -109,9 +109,8 @@ def main():
     june = June()
 
     # 1st phrase
-    june._start_test_round_backtest()
-    print("----------------------------------------------------------------------------------------------------")
-    exit()
+    # june._start_test_round_backtest()
+    # print("----------------------------------------------------------------------------------------------------")
     june._start_first_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     june._screen_full_backtest_result()

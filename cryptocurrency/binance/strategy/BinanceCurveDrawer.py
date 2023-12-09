@@ -16,7 +16,7 @@ class BinanceCurveDrawer:
         self.upper_band     = upper_band
         self.lower_band     = lower_band
 
-    def draw_curves(self):
+    def _draw_curves(self):
         single_result_df = self._get_single_result_df()
         self._draw_and_save_equity_curve(single_result_df)
 
@@ -38,7 +38,7 @@ class BinanceCurveDrawer:
 
         return result_path
 
-    def _get_result_df(self):
+    def _get_single_result_df(self):
         result_path        = self._get_result_path()
         single_result_path = f"{result_path}/{self.symbol}/{self.single_df_name}/single_result"
         single_result_csv  = f"{single_result_path}/{self.symbol}_{self.rolling_window}_{self.upper_band}_{self.lower_band}.csv"
@@ -49,7 +49,7 @@ class BinanceCurveDrawer:
                                         single_result_df["long_tx_fee"] + single_result_df["short_tx_fee"]
         single_result_df["cum_pnl"]   = single_result_df["total_pnl"].cumsum()
 
-        return result_df
+        return single_result_df
 
     def _get_full_result_df(self):
         result_path      = self._get_result_path()

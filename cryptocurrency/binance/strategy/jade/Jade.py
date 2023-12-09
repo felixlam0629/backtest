@@ -15,10 +15,10 @@ class Jade:
         self.product    = "usdm_futures"
         self.interval   = "8h"
         
-        self.delete_file = False # default = False
+        self.delete_file = True # default = False
 
         self.binanceDataProcessor = BinanceDataProcessor(self.strategy, self.instrument, self.product, self.interval)
-        self.jadeDataProcessor  = JadeDataProcessor(self.strategy, self.instrument, self.product, self.interval)
+        self.jadeDataProcessor    = JadeDataProcessor(self.strategy, self.instrument, self.product, self.interval)
 
     def _start_test_round_backtest(self):
         first_round_backtest = True
@@ -72,7 +72,7 @@ class Jade:
         first_round_backtest = False
         full_para_backtest   = True
 
-        finished_list = self.BinanceDataProcessor._get_finished_list()
+        finished_list = self.binanceDataProcessor._get_finished_list()
 
         for symbol in finished_list:
             try:
@@ -108,14 +108,15 @@ class Jade:
 def main():
     jade = Jade()
 
+    """
     # 1st phrase
     jade._start_test_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
-    exit()
     jade._start_first_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     jade._screen_full_backtest_result()
     print("----------------------------------------------------------------------------------------------------")
+    """
 
     """
     # 2nd phrase
@@ -123,13 +124,12 @@ def main():
     print("----------------------------------------------------------------------------------------------------")
     """
 
-    """
     # final phrase
     jade._start_second_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     jade._draw_full_backtest_result_curves()
     print("----------------------------------------------------------------------------------------------------")
-    """
+
 
 if __name__ == "__main__":
     main()

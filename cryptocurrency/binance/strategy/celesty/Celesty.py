@@ -15,7 +15,7 @@ class Celesty:
         self.product    = "usdm_futures"
         self.interval   = "8h"
         
-        self.delete_file = False # default = False
+        self.delete_file = True # default = False
 
         self.binanceDataProcessor = BinanceDataProcessor(self.strategy, self.instrument, self.product, self.interval)
         self.celestyDataProcessor = CelestyDataProcessor(self.strategy, self.instrument, self.product, self.interval)
@@ -108,13 +108,15 @@ class Celesty:
 def main():
     celesty = Celesty()
 
+    """
     # 1st phrase
-    # celesty._start_test_round_backtest()
-    # print("----------------------------------------------------------------------------------------------------")
+    celesty._start_test_round_backtest()
+    print("----------------------------------------------------------------------------------------------------")
     celesty._start_first_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     celesty._screen_full_backtest_result()
     print("----------------------------------------------------------------------------------------------------")
+    """
 
     """
     # 2nd phrase

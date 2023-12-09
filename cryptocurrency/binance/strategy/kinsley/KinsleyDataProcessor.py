@@ -1,5 +1,7 @@
 import calendar
 import datetime
+import pandas as pd
+import requests
 
 from cryptocurrency.binance.strategy.BinanceDataProcessor import BinanceDataProcessor
 
@@ -24,17 +26,67 @@ class KinsleyDataProcessor:
         self.binanceDataProcessor = BinanceDataProcessor(self.strategy, self.instrument, self.product, self.interval, self.symbol)
 
     def _get_backtest_df_for_backtest_system(self):
-        # add taker_ls_vol here
         base_backtest_df = self.binanceDataProcessor._get_base_backtest_df()
         finished_path    = self.binanceDataProcessor._get_finished_path()
 
-        backtest_df = self.get_formatted_backtest_df(base_backtest_df)
+        taker_ls_volume_path = self._get_taker_ls_volume_path()
+        taker_ls_volume_df   = self._get_taker_ls_volume_df(taker_ls_volume_path)
+
+        backtest_df = self.get_formatted_backtest_df(taker_ls_volume_df, base_backtest_df)
 
         return backtest_df, finished_path
 
-    def get_formatted_backtest_df(self, base_backtest_df):
+    def _get_taker_ls_volume_path(self): # from binance as they do not have enough data yet
+        taker_ls_volume_function = "taker_ls_volume"
+        taker_ls_volume_interval = "4h"
+
+        taker_ls_volume_path = f"D:/data/{self.asset}/{self.exchange}/{self.instrument}/{self.product}/{taker_ls_volume_function}/{taker_ls_volume_interval}"
+
+        return taker_ls_volume_path
+
+    def _get_taker_ls_volume_df(self, taker_ls_volume_path): # from binance as they do not have enough data yet
+        asset      = self.asset
+        strategy   = self.strategy
+        exchange   = self.exchange
+        instrument = self.instrument
+        product    = self.product
+        function   = "taker_ls_volume"
+        interval   = "4h"
+        symbol     = self.symbol
+
+        taker_ls_volume_csv = f"{taker_ls_volume_path}/{symbol}.csv"
+
+        try:
+            taker_ls_volume_df = pd.read_csv(taker_ls_volume_csv)
+            taker_ls_volume_df = taker_ls_volume_df[["timestamp", "datetime", "buySellRatio"]]
+            taker_ls_volume_df = taker_ls_volume_df.round({"timestamp": -3})
+            taker_ls_volume_df.rename(columns = {"timestamp": "time"}, inplace = True)
+
+        except:
+            message = {"strategy": strategy, "symbol": symbol, "interval": interval, "product": product, "instrument": instrument, "function": function, "exchange": exchange, "asset": asset,
+                       "msg": "no taker_ls_volume data file"}
+
+            if symbol[-6:].isdigit() == True:
+                pass
+
+            else:
+                message = str(message)
+                self.__send_tg_msg_to_backtest_channel(message)
+
+            print(strategy, symbol, interval, product, instrument, function, exchange, "response = failed backtest, reason = without taker_ls_volume data file")
+            print("**************************************************")
+
+            raise StopIteration
+
+        return taker_ls_volume_df
+
+    def get_formatted_backtest_df(self, taker_ls_volume_df, base_backtest_df):
         # add long_short ratio here
-        base_backtest_df["backtest_data"] = base_backtest_df["fundingRate"]
+        base_backtest_df = pd.merge(taker_ls_volume_df, base_backtest_df, on = "time", how = "inner")
+        base_backtest_df.rename(columns = {"datetime_x": "datetime"}, inplace = True)
+        base_backtest_df = base_backtest_df[["time", "datetime", "open", "fundingRate", "buySellRatio"]]
+
+        base_backtest_df["backtest_data"] = base_backtest_df["buySellRatio"]
         base_backtest_df                  = base_backtest_df[["time", "datetime", "open", "fundingRate", "backtest_data"]]
 
         backtest_df = self.__clean_data(base_backtest_df)
@@ -47,3 +99,7 @@ class KinsleyDataProcessor:
         df = df.reset_index(drop = True)  # reset row index
 
         return df
+
+    def __send_tg_msg_to_backtest_channel(self, message):
+        base_url = "https://api.telegram.org/bot6233469935:AAHayu1tVZ4NleqRFM-61F6VQObWMCwF90U/sendMessage?chat_id=-809813823&text="
+        requests.get(base_url + message)

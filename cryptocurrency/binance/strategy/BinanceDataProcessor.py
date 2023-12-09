@@ -266,7 +266,6 @@ class BinanceDataProcessor:
         base_url = "https://api.telegram.org/bot6233469935:AAHayu1tVZ4NleqRFM-61F6VQObWMCwF90U/sendMessage?chat_id=-809813823&text="
         requests.get(base_url + message)
 
-
 def main():
     binanceDataProcessor = BinanceDataProcessor("claire", "futures", "usdm_futures", "8h", "BTCUSDT")
     binanceDataProcessor._get_base_backtest_df()

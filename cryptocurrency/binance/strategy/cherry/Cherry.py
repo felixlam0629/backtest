@@ -72,7 +72,7 @@ class Cherry:
         first_round_backtest = False
         full_para_backtest   = True
 
-        finished_list = self.BinanceDataProcessor._get_finished_list()
+        finished_list = self.binanceDataProcessor._get_finished_list()
 
         for symbol in finished_list:
             try:
@@ -109,9 +109,8 @@ def main():
     cherry = Cherry()
 
     # 1st phrase
-    cherry._start_test_round_backtest()
-    print("----------------------------------------------------------------------------------------------------")
-    exit()
+    # cherry._start_test_round_backtest()
+    # print("----------------------------------------------------------------------------------------------------")
     cherry._start_first_round_backtest()
     print("----------------------------------------------------------------------------------------------------")
     cherry._screen_full_backtest_result()

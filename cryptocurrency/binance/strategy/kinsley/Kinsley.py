@@ -72,7 +72,7 @@ class Kinsley:
         first_round_backtest = False
         full_para_backtest   = True
 
-        finished_list = self.BinanceDataProcessor._get_finished_list()
+        finished_list = self.binanceDataProcessor._get_finished_list()
 
         for symbol in finished_list:
             try:

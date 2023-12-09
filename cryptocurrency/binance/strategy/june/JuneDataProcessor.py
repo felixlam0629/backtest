@@ -1,5 +1,7 @@
 import calendar
 import datetime
+import pandas as pd
+import requests
 
 from cryptocurrency.binance.strategy.BinanceDataProcessor import BinanceDataProcessor
 
@@ -24,17 +26,113 @@ class JuneDataProcessor:
         self.binanceDataProcessor = BinanceDataProcessor(self.strategy, self.instrument, self.product, self.interval, self.symbol)
 
     def _get_backtest_df_for_backtest_system(self):
-        # add top_trader_ls_ratio_acc
         base_backtest_df = self.binanceDataProcessor._get_base_backtest_df()
         finished_path    = self.binanceDataProcessor._get_finished_path()
 
-        backtest_df = self.get_formatted_backtest_df(base_backtest_df)
+        top_trader_ls_ratio_acc_path = self._get_top_trader_ls_ratio_acc_path()
+        top_trader_ls_ratio_acc_df   = self._get_top_trader_ls_ratio_acc_df(top_trader_ls_ratio_acc_path)
+
+        backtest_df = self.get_formatted_backtest_df(top_trader_ls_ratio_acc_df, base_backtest_df)
 
         return backtest_df, finished_path
 
-    def get_formatted_backtest_df(self, base_backtest_df):
-        # add long_short ratio here
-        base_backtest_df["backtest_data"] = base_backtest_df["fundingRate"]
+    def _get_top_trader_ls_ratio_acc_path(self): # from coinglass
+        top_trader_ls_ratio_acc_source   = "coinglass"
+        top_trader_ls_ratio_acc_function = "top_ls_acc"
+        top_trader_ls_ratio_acc_type     = "perpetual"
+        top_trader_ls_ratio_acc_interval = "h8"
+
+        top_trader_ls_ratio_acc_path = f"D:/data/{self.asset}/{top_trader_ls_ratio_acc_source}/{self.instrument}/{top_trader_ls_ratio_acc_function}/{top_trader_ls_ratio_acc_type}/{top_trader_ls_ratio_acc_interval}/{self.exchange}"
+
+        return top_trader_ls_ratio_acc_path
+    def _get_top_trader_ls_ratio_acc_df(self, top_trader_ls_ratio_acc_path): # from coinglass
+        asset      = self.asset
+        strategy   = self.strategy
+        exchange   = self.exchange
+        instrument = self.instrument
+        product    = self.product
+        function   = "top_ls_acc"
+        interval   = self.interval
+        symbol     = self.symbol
+
+        top_trader_ls_ratio_acc_csv = f"{top_trader_ls_ratio_acc_path}/{symbol}.csv"
+
+        try:
+            top_trader_ls_ratio_acc_df = pd.read_csv(top_trader_ls_ratio_acc_csv)
+            top_trader_ls_ratio_acc_df = top_trader_ls_ratio_acc_df[["createTime", "datetime", "longShortRatio"]]
+            top_trader_ls_ratio_acc_df = top_trader_ls_ratio_acc_df.round({"createTime": -3})
+            top_trader_ls_ratio_acc_df.rename(columns = {"createTime": "time"}, inplace=True)
+
+        except:
+            message = {"strategy": strategy, "symbol": symbol, "interval": interval, "product": product, "instrument": instrument, "function": function, "exchange": exchange, "asset": asset,
+                       "msg": "no top_trader_ls_ratio_acc data file"}
+
+            if symbol[-6:].isdigit() == True:
+                pass
+
+            else:
+                message = str(message)
+                self.__send_tg_msg_to_backtest_channel(message)
+
+            print(strategy, symbol, interval, product, instrument, function, exchange, "response = failed backtest, reason = without top_trader_ls_ratio_acc data file")
+            print("**************************************************")
+
+            raise StopIteration
+
+        return top_trader_ls_ratio_acc_df
+
+    """
+    def _get_top_trader_ls_ratio_acc_path(self): # from binance as they do not have enough data yet
+        top_trader_ls_ratio_acc_function = "top_trader_ls_ratio_acc"
+        top_trader_ls_ratio_acc_interval = "4h"
+
+        top_trader_ls_ratio_acc_path = f"D:/data/{self.asset}/{self.exchange}/{self.instrument}/{self.product}/{top_trader_ls_ratio_acc_function}/{top_trader_ls_ratio_acc_interval}"
+
+        return top_trader_ls_ratio_acc_path
+        
+    def _get_top_trader_ls_ratio_acc_df(self, top_trader_ls_ratio_acc_path): # from binance as they do not have enough data yet
+        asset      = self.asset
+        strategy   = self.strategy
+        exchange   = self.exchange
+        instrument = self.instrument
+        product    = self.product
+        function   = "top_trader_ls_ratio_acc"
+        interval   = "4h"
+        symbol     = self.symbol
+
+        top_trader_ls_ratio_acc_csv = f"{top_trader_ls_ratio_acc_path}/{symbol}.csv"
+
+        try:
+            top_trader_ls_ratio_acc_df = pd.read_csv(top_trader_ls_ratio_acc_csv)
+            top_trader_ls_ratio_acc_df = top_trader_ls_ratio_acc_df[["timestamp", "datetime", "longShortRatio"]]
+            top_trader_ls_ratio_acc_df = top_trader_ls_ratio_acc_df.round({"timestamp": -3})
+            top_trader_ls_ratio_acc_df.rename(columns = {"timestamp": "time"}, inplace=True)
+
+        except:
+            message = {"strategy": strategy, "symbol": symbol, "interval": interval, "product": product, "instrument": instrument, "function": function, "exchange": exchange, "asset": asset,
+                       "msg": "no top_trader_ls_ratio_acc data file"}
+
+            if symbol[-6:].isdigit() == True:
+                pass
+
+            else:
+                message = str(message)
+                self.__send_tg_msg_to_backtest_channel(message)
+
+            print(strategy, symbol, interval, product, instrument, function, exchange, "response = failed backtest, reason = without top_trader_ls_ratio_acc data file")
+            print("**************************************************")
+
+            raise StopIteration
+
+        return top_trader_ls_ratio_acc_df
+        """
+
+    def get_formatted_backtest_df(self, top_trader_ls_ratio_acc_df, base_backtest_df):
+        base_backtest_df = pd.merge(top_trader_ls_ratio_acc_df, base_backtest_df, on = "time", how = "inner")
+        base_backtest_df.rename(columns = {"datetime_x": "datetime"}, inplace = True)
+        base_backtest_df = base_backtest_df[["time", "datetime", "open", "fundingRate", "longShortRatio"]]
+
+        base_backtest_df["backtest_data"] = base_backtest_df["longShortRatio"]
         base_backtest_df                  = base_backtest_df[["time", "datetime", "open", "fundingRate", "backtest_data"]]
 
         backtest_df = self.__clean_data(base_backtest_df)
@@ -47,3 +145,7 @@ class JuneDataProcessor:
         df = df.reset_index(drop = True)  # reset row index
 
         return df
+
+    def __send_tg_msg_to_backtest_channel(self, message):
+        base_url = "https://api.telegram.org/bot6233469935:AAHayu1tVZ4NleqRFM-61F6VQObWMCwF90U/sendMessage?chat_id=-809813823&text="
+        requests.get(base_url + message)
